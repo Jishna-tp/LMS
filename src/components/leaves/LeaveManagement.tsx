@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Calendar, Clock, CheckCircle, XCircle, FileText, Filter, Search, CreditCard as Edit, Trash2, AlertCircle } from 'lucide-react'
+import { Plus, Calendar, Clock, CheckCircle, XCircle, FileText, Filter, Search, CreditCard as Edit, Trash2, AlertCircle, X } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { createNotification } from '../../lib/notifications'
@@ -534,6 +534,76 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         )}
       </div>
 
+      {/* Workflow History Modal */}
+      {showWorkflowHistory && selectedLeave && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Workflow History - {selectedLeave.type} Leave
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowWorkflowHistory(false)
+                    setSelectedLeave(null)
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded transition-colors"
+                >
+                  <X className="h-4 w-4 text-gray-400" />
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">
+                {selectedLeave.employees?.name} • {selectedLeave.days_requested} days • {new Date(selectedLeave.start_date).toLocaleDateString()} - {new Date(selectedLeave.end_date).toLocaleDateString()}
+              </p>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                {selectedLeave.workflow_history?.map((history, index) => (
+                  <div key={history.id} className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        history.action_type === 'submitted' ? 'bg-blue-100' :
+                        history.action_type === 'manager_approved' ? 'bg-green-100' :
+                        history.action_type === 'hr_approved' ? 'bg-green-100' :
+                        history.action_type === 'auto_approved' ? 'bg-purple-100' :
+                        'bg-red-100'
+                      }`}>
+                        {history.action_type === 'submitted' && <FileText className="h-4 w-4 text-blue-600" />}
+                        {(history.action_type === 'manager_approved' || history.action_type === 'hr_approved' || history.action_type === 'auto_approved') && <CheckCircle className="h-4 w-4 text-green-600" />}
+                        {history.action_type === 'rejected' && <XCircle className="h-4 w-4 text-red-600" />}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <p className="font-medium text-gray-900">{history.actor.name}</p>
+                        <span className="text-xs text-gray-500">({history.actor.role})</span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {history.action_type === 'submitted' && 'Submitted leave request'}
+                        {history.action_type === 'manager_approved' && 'Approved by Manager'}
+                        {history.action_type === 'hr_approved' && 'Approved by HR'}
+                        {history.action_type === 'auto_approved' && 'Auto-approved'}
+                        {history.action_type === 'rejected' && 'Rejected'}
+                      </p>
+                      {history.notes && (
+                        <p className="text-sm text-gray-500 mt-1 italic">"{history.notes}"</p>
+                      )}
+                      <p className="text-xs text-gray-400 mt-1">
+                        {new Date(history.created_at).toLocaleDateString()} at {new Date(history.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    {index < (selectedLeave.workflow_history?.length || 0) - 1 && (
+                      <div className="absolute left-4 mt-8 w-px h-6 bg-gray-200"></div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Leave Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -635,76 +705,5 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         </div>
       )}
     </div>
-
-      {/* Workflow History Modal */}
-      {showWorkflowHistory && selectedLeave && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Workflow History - {selectedLeave.type} Leave
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowWorkflowHistory(false)
-                    setSelectedLeave(null)
-                  }}
-                  className="p-2 hover:bg-gray-100 rounded transition-colors"
-                >
-                  <X className="h-4 w-4 text-gray-400" />
-                </button>
-              </div>
-              <p className="text-sm text-gray-600 mt-1">
-                {selectedLeave.employees?.name} • {selectedLeave.days_requested} days • {new Date(selectedLeave.start_date).toLocaleDateString()} - {new Date(selectedLeave.end_date).toLocaleDateString()}
-              </p>
-            </div>
-            
-            <div className="p-6">
-              <div className="space-y-4">
-                {selectedLeave.workflow_history?.map((history, index) => (
-                  <div key={history.id} className="flex items-start space-x-4">
-                    <div className="flex-shrink-0">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        history.action_type === 'submitted' ? 'bg-blue-100' :
-                        history.action_type === 'manager_approved' ? 'bg-green-100' :
-                        history.action_type === 'hr_approved' ? 'bg-green-100' :
-                        history.action_type === 'auto_approved' ? 'bg-purple-100' :
-                        'bg-red-100'
-                      }`}>
-                        {history.action_type === 'submitted' && <FileText className="h-4 w-4 text-blue-600" />}
-                        {(history.action_type === 'manager_approved' || history.action_type === 'hr_approved' || history.action_type === 'auto_approved') && <CheckCircle className="h-4 w-4 text-green-600" />}
-                        {history.action_type === 'rejected' && <XCircle className="h-4 w-4 text-red-600" />}
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <p className="font-medium text-gray-900">{history.actor.name}</p>
-                        <span className="text-xs text-gray-500">({history.actor.role})</span>
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        {history.action_type === 'submitted' && 'Submitted leave request'}
-                        {history.action_type === 'manager_approved' && 'Approved by Manager'}
-                        {history.action_type === 'hr_approved' && 'Approved by HR'}
-                        {history.action_type === 'auto_approved' && 'Auto-approved'}
-                        {history.action_type === 'rejected' && 'Rejected'}
-                      </p>
-                      {history.notes && (
-                        <p className="text-sm text-gray-500 mt-1 italic">"{history.notes}"</p>
-                      )}
-                      <p className="text-xs text-gray-400 mt-1">
-                        {new Date(history.created_at).toLocaleDateString()} at {new Date(history.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                    {index < (selectedLeave.workflow_history?.length || 0) - 1 && (
-                      <div className="absolute left-4 mt-8 w-px h-6 bg-gray-200"></div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
   )
 }
