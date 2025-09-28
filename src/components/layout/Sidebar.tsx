@@ -1,0 +1,106 @@
+import React from 'react'
+import { 
+  LayoutDashboard, 
+  User, 
+  Calendar, 
+  Users, 
+  LogOut,
+  ChevronRight
+} from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+
+interface SidebarProps {
+  activeTab: string
+  onTabChange: (tab: string) => void
+  isOpen: boolean
+  onToggle: () => void
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen, onToggle }) => {
+  const { user, logout } = useAuth()
+
+  const menuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Employee', 'Manager', 'HR', 'Admin'] },
+    { id: 'profile', label: 'Profile', icon: User, roles: ['Employee', 'Manager', 'HR', 'Admin'] },
+    { id: 'leaves', label: 'Leaves', icon: Calendar, roles: ['Employee', 'Manager', 'HR', 'Admin'] },
+    { id: 'employees', label: 'Employees', icon: Users, roles: ['Admin'] },
+  ]
+
+  const filteredMenuItems = menuItems.filter(item => 
+    item.roles.includes(user?.employee.role || 'Employee')
+  )
+
+  return (
+    <>
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={onToggle}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={`
+        fixed top-0 left-0 h-full bg-white shadow-xl z-50 transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        lg:translate-x-0 lg:static lg:z-auto
+        w-64 flex flex-col
+      `}>
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-gray-900">EMS</h1>
+            <button
+              onClick={onToggle}
+              className="lg:hidden p-1 rounded-md hover:bg-gray-100"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+          {user && (
+            <div className="mt-4">
+              <p className="text-sm font-medium text-gray-900">{user.employee.name}</p>
+              <p className="text-xs text-gray-500">{user.employee.role}</p>
+              <p className="text-xs text-gray-500">{user.employee.employee_id}</p>
+            </div>
+          )}
+        </div>
+
+        <nav className="flex-1 p-4 space-y-2">
+          {filteredMenuItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  onTabChange(item.id)
+                  if (window.innerWidth < 1024) onToggle()
+                }}
+                className={`
+                  w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors
+                  ${activeTab === item.id
+                    ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-700'
+                    : 'text-gray-700 hover:bg-gray-50'
+                  }
+                `}
+              >
+                <Icon className={`h-5 w-5 mr-3 ${activeTab === item.id ? 'text-blue-700' : 'text-gray-400'}`} />
+                {item.label}
+              </button>
+            )
+          })}
+        </nav>
+
+        <div className="p-4 border-t border-gray-200">
+          <button
+            onClick={logout}
+            className="w-full flex items-center px-4 py-3 text-left rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <LogOut className="h-5 w-5 mr-3" />
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </>
+  )
+}

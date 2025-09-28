@@ -1,0 +1,124 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+
+export const supabase = createClient(supabaseUrl, supabaseKey)
+
+export type Database = {
+  public: {
+    Tables: {
+      employees: {
+        Row: {
+          id: string
+          employee_id: string
+          name: string
+          email: string
+          role: 'Employee' | 'Manager' | 'HR' | 'Admin'
+          department: string
+          manager_id: string | null
+          hire_date: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          employee_id?: string
+          name: string
+          email: string
+          role: 'Employee' | 'Manager' | 'HR' | 'Admin'
+          department: string
+          manager_id?: string | null
+          hire_date?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          employee_id?: string
+          name?: string
+          email?: string
+          role?: 'Employee' | 'Manager' | 'HR' | 'Admin'
+          department?: string
+          manager_id?: string | null
+          hire_date?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      users: {
+        Row: {
+          id: string
+          employee_id: string
+          username: string
+          password_hash: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          username: string
+          password_hash: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          employee_id?: string
+          username?: string
+          password_hash?: string
+          created_at?: string
+        }
+      }
+      leave_requests: {
+        Row: {
+          id: string
+          employee_id: string
+          type: 'Annual' | 'Sick' | 'Personal' | 'Maternity' | 'Paternity' | 'Emergency'
+          start_date: string
+          end_date: string
+          days_requested: number
+          reason: string | null
+          status: 'Pending' | 'Manager_Approved' | 'HR_Approved' | 'Rejected'
+          manager_notes: string | null
+          hr_notes: string | null
+          approved_by_manager: string | null
+          approved_by_hr: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          type: 'Annual' | 'Sick' | 'Personal' | 'Maternity' | 'Paternity' | 'Emergency'
+          start_date: string
+          end_date: string
+          days_requested: number
+          reason?: string | null
+          status?: 'Pending' | 'Manager_Approved' | 'HR_Approved' | 'Rejected'
+          manager_notes?: string | null
+          hr_notes?: string | null
+          approved_by_manager?: string | null
+          approved_by_hr?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          employee_id?: string
+          type?: 'Annual' | 'Sick' | 'Personal' | 'Maternity' | 'Paternity' | 'Emergency'
+          start_date?: string
+          end_date?: string
+          days_requested?: number
+          reason?: string | null
+          status?: 'Pending' | 'Manager_Approved' | 'HR_Approved' | 'Rejected'
+          manager_notes?: string | null
+          hr_notes?: string | null
+          approved_by_manager?: string | null
+          approved_by_hr?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+    }
+  }
+}
