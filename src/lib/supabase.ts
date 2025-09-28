@@ -119,6 +119,38 @@ export type Database = {
           updated_at?: string
         }
       }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          message: string
+          type: 'leave_approved' | 'leave_rejected' | 'leave_submitted' | 'leave_manager_approved'
+          is_read: boolean
+          related_leave_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          message: string
+          type: 'leave_approved' | 'leave_rejected' | 'leave_submitted' | 'leave_manager_approved'
+          is_read?: boolean
+          related_leave_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          message?: string
+          type?: 'leave_approved' | 'leave_rejected' | 'leave_submitted' | 'leave_manager_approved'
+          is_read?: boolean
+          related_leave_id?: string | null
+          created_at?: string
+        }
+      }
     }
   }
 }

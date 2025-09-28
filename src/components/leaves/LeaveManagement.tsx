@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Plus, Calendar, Clock, CheckCircle, XCircle, FileText, Filter, Search, CreditCard as Edit, Trash2, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { createNotification } from '../../lib/notifications'
 
 interface LeaveRequest {
   id: string
@@ -14,6 +15,8 @@ interface LeaveRequest {
   status: string
   manager_notes: string | null
   hr_notes: string | null
+  approved_by_manager: string | null
+  approved_by_hr: string | null
   created_at: string
   employees?: { name: string; department: string }
 }
@@ -51,8 +54,22 @@ export const LeaveManagement: React.FC = () => {
       // Role-based filtering
       if (user?.employee.role === 'Employee') {
         query = query.eq('employee_id', user.employee.employee_id)
+      } else if (user?.employee.role === 'Manager') {
+        // Manager sees their team's leaves (employees who report to them)
+        const { data: teamMembers } = await supabase
+          .from('employees')
+          .select('employee_id')
+          .eq('manager_id', user.employee.id)
+        
+        const teamEmployeeIds = teamMembers?.map(member => member.employee_id) || []
+        if (teamEmployeeIds.length > 0) {
+          query = query.in('employee_id', teamEmployeeIds)
+        } else {
+          // Manager has no team members, show empty result
+          query = query.eq('employee_id', 'no-team-members')
+        }
       }
-      // Manager and HR see all leaves (simplified)
+      // HR and Admin see all leaves
 
       const { data, error } = await query
       if (error) throw error
@@ -112,6 +129,16 @@ export const LeaveManagement: React.FC = () => {
         setMessage({ type: 'success', text: 'Leave request submitted successfully' })
       }
 
+        // Notify manager about new leave request
+        if (user?.employee.manager_id) {
+          await createNotification(
+            user.employee.manager_id,
+            'New Leave Request',
+            `${user.employee.name} has submitted a ${formData.type} leave request for ${days} days.`,
+            'leave_submitted',
+            newLeave.id
+          )
+        }
       setShowForm(false)
       setEditingLeave(null)
       setFormData({ type: 'Annual', start_date: '', end_date: '', reason: '' })
@@ -157,31 +184,83 @@ export const LeaveManagement: React.FC = () => {
     }
   }
 
-  const handleApproveReject = async (leaveId: string, action: 'approve' | 'reject', notes: string = '') => {
+  const handleApproveReject = async (leave: LeaveRequest, action: 'approve' | 'reject', notes: string = '') => {
     try {
       let newStatus = ''
       let updateData: any = {}
+      let notificationTitle = ''
+      let notificationMessage = ''
+      let notificationType: 'leave_approved' | 'leave_rejected' | 'leave_manager_approved' = 'leave_approved'
 
       if (action === 'approve') {
         if (user?.employee.role === 'Manager') {
           newStatus = 'Manager_Approved'
           updateData = { status: newStatus, manager_notes: notes, approved_by_manager: user.employee.id }
+          notificationTitle = 'Leave Request Manager Approved'
+          notificationMessage = `Your ${leave.type} leave request has been approved by your manager.`
+          notificationType = 'leave_manager_approved'
         } else if (user?.employee.role === 'HR') {
           newStatus = 'HR_Approved'
           updateData = { status: newStatus, hr_notes: notes, approved_by_hr: user.employee.id }
+          notificationTitle = 'Leave Request Approved'
+          notificationMessage = `Your ${leave.type} leave request has been fully approved by HR.`
+          notificationType = 'leave_approved'
         }
       } else {
         newStatus = 'Rejected'
-        updateData = { status: newStatus, manager_notes: notes }
+        if (user?.employee.role === 'Manager') {
+          updateData = { status: newStatus, manager_notes: notes }
+        } else if (user?.employee.role === 'HR') {
+          updateData = { status: newStatus, hr_notes: notes }
+        }
+        notificationTitle = 'Leave Request Rejected'
+        notificationMessage = `Your ${leave.type} leave request has been rejected. ${notes ? `Reason: ${notes}` : ''}`
+        notificationType = 'leave_rejected'
       }
 
       const { error } = await supabase
         .from('leave_requests')
         .update(updateData)
-        .eq('id', leaveId)
+        .eq('id', leave.id)
 
       if (error) throw error
 
+      // Get employee info to send notification
+      const { data: employee } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('employee_id', leave.employee_id)
+        .single()
+
+      if (employee) {
+        await createNotification(
+          employee.id,
+          notificationTitle,
+          notificationMessage,
+          notificationType,
+          leave.id
+        )
+      }
+
+      // If manager approved, notify HR
+      if (user?.employee.role === 'Manager' && action === 'approve') {
+        const { data: hrUsers } = await supabase
+          .from('employees')
+          .select('id')
+          .eq('role', 'HR')
+
+        if (hrUsers && hrUsers.length > 0) {
+          for (const hrUser of hrUsers) {
+            await createNotification(
+              hrUser.id,
+              'Leave Request Needs HR Approval',
+              `A ${leave.type} leave request from ${leave.employees?.name} has been approved by manager and needs HR approval.`,
+              'leave_manager_approved',
+              leave.id
+            )
+          }
+        }
+      }
       setMessage({ type: 'success', text: `Leave request ${action}d successfully` })
       fetchLeaves()
     } catch (error: any) {
@@ -207,6 +286,15 @@ export const LeaveManagement: React.FC = () => {
     }
   }
 
+  const canApprove = (leave: LeaveRequest) => {
+    if (user?.employee.role === 'Manager' && leave.status === 'Pending') {
+      return true
+    }
+    if (user?.employee.role === 'HR' && (leave.status === 'Pending' || leave.status === 'Manager_Approved')) {
+      return true
+    }
+    return false
+  }
   const filteredLeaves = leaves.filter(leave => {
     const matchesFilter = filter === 'all' || leave.status === filter
     const matchesSearch = searchTerm === '' || 
@@ -362,17 +450,17 @@ export const LeaveManagement: React.FC = () => {
                     )}
                     
                     {/* Manager/HR actions */}
-                    {(user?.employee.role === 'Manager' || user?.employee.role === 'HR') && leave.status === 'Pending' && (
+                    {canApprove(leave) && (
                       <>
                         <button
-                          onClick={() => handleApproveReject(leave.id, 'approve')}
+                          onClick={() => handleApproveReject(leave, 'approve')}
                           className="flex items-center px-3 py-1 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-sm"
                         >
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Approve
                         </button>
                         <button
-                          onClick={() => handleApproveReject(leave.id, 'reject')}
+                          onClick={() => handleApproveReject(leave, 'reject')}
                           className="flex items-center px-3 py-1 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors text-sm"
                         >
                           <XCircle className="h-4 w-4 mr-1" />

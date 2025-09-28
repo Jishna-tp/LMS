@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { User, Mail, Calendar, Building, Lock, Save, AlertCircle, CheckCircle } from 'lucide-react'
+import { User, Mail, Calendar, Building, Lock, Save, AlertCircle, CheckCircle, Users } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { changePassword } from '../../lib/auth'
 import { supabase } from '../../lib/supabase'
@@ -7,6 +7,8 @@ import { supabase } from '../../lib/supabase'
 export const Profile: React.FC = () => {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile')
+  const [managerInfo, setManagerInfo] = useState<{ name: string } | null>(null)
+  const [loadingManager, setLoadingManager] = useState(true)
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -18,6 +20,32 @@ export const Profile: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
 
+  React.useEffect(() => {
+    if (user?.employee.manager_id) {
+      fetchManagerInfo()
+    } else {
+      setLoadingManager(false)
+    }
+  }, [user])
+
+  const fetchManagerInfo = async () => {
+    if (!user?.employee.manager_id) return
+
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('name')
+        .eq('id', user.employee.manager_id)
+        .single()
+
+      if (error) throw error
+      setManagerInfo(data)
+    } catch (error) {
+      console.error('Error fetching manager info:', error)
+    } finally {
+      setLoadingManager(false)
+    }
+  }
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -141,7 +169,7 @@ export const Profile: React.FC = () => {
               {/* Employee Information */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Employee Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
                     <User className="h-5 w-5 text-gray-400" />
                     <div>
@@ -173,6 +201,18 @@ export const Profile: React.FC = () => {
                       <p className="text-gray-900">{user.employee.employee_id}</p>
                     </div>
                   </div>
+
+                  {user.employee.manager_id && (
+                    <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
+                      <Users className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Line Manager</p>
+                        <p className="text-gray-900">
+                          {loadingManager ? 'Loading...' : (managerInfo?.name || 'Unknown')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

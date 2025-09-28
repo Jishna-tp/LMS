@@ -1,4 +1,5 @@
 import React from 'react'
+import { useState, useEffect } from 'react'
 import { 
   LayoutDashboard, 
   User, 
@@ -8,6 +9,7 @@ import {
   ChevronRight
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { getUnreadNotificationCount } from '../../lib/notifications'
 
 interface SidebarProps {
   activeTab: string
@@ -18,6 +20,25 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen, onToggle }) => {
   const { user, logout } = useAuth()
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount()
+      // Poll for new notifications every 30 seconds
+      const interval = setInterval(fetchUnreadCount, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [user])
+
+  const fetchUnreadCount = async () => {
+    if (!user) return
+    
+    const result = await getUnreadNotificationCount(user.employee.id)
+    if (result.success) {
+      setUnreadCount(result.count)
+    }
+  }
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Employee', 'Manager', 'HR', 'Admin'] },
@@ -49,7 +70,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
       `}>
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-gray-900">EMS</h1>
+            <div className="flex items-center space-x-2">
+              <h1 className="text-xl font-bold text-gray-900">EMS</h1>
+              {unreadCount > 0 && (
+                <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </div>
             <button
               onClick={onToggle}
               className="lg:hidden p-1 rounded-md hover:bg-gray-100"
