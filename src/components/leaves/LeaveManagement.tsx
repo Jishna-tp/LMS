@@ -64,15 +64,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         .from('leave_requests')
         .select(`
           *,
-          employees:employee_id (name, department),
-          workflow_history:leave_workflow_history (
-            id,
-            action_by,
-            action_type,
-            notes,
-            created_at,
-            actor:action_by (name, role)
-          )
+          employees:employee_id (name, department)
         `)
         .order('created_at', { ascending: false })
 
