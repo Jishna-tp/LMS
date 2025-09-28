@@ -15,6 +15,11 @@ const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // Handle navigation after form submission
+  const handleLeaveSubmitted = () => {
+    setActiveTab('leaves')
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -48,7 +53,7 @@ const AppContent: React.FC = () => {
       case 'profile':
         return <Profile />
       case 'leaves':
-        return <LeaveManagement />
+        return <LeaveManagement onLeaveSubmitted={handleLeaveSubmitted} />
       case 'employees':
         return <EmployeeManagement />
       default:

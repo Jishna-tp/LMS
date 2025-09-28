@@ -12,6 +12,14 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle, title }) => {
   const { user } = useAuth()
   const [showNotifications, setShowNotifications] = React.useState(false)
 
+  const handleLeaveClick = (leaveId: string) => {
+    // This would ideally navigate to the specific leave
+    // For now, we'll just close notifications and the parent can handle navigation
+    setShowNotifications(false)
+    // In a real app, you might use React Router to navigate to /leaves/${leaveId}
+    console.log('Navigate to leave:', leaveId)
+  }
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 relative">
       <div className="flex items-center justify-between">
@@ -54,7 +62,10 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle, title }) => {
             onClick={() => setShowNotifications(false)}
           />
           <div className="absolute right-6 top-full mt-2 z-50">
-            <NotificationPanel onClose={() => setShowNotifications(false)} />
+            <NotificationPanel 
+              onClose={() => setShowNotifications(false)} 
+              onLeaveClick={handleLeaveClick}
+            />
           </div>
         </>
       )}
