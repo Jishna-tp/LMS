@@ -1,6 +1,7 @@
 import React from 'react'
-import { Menu, Bell } from 'lucide-react'
+import { Menu, Bell, X } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { NotificationPanel } from './NotificationPanel'
 
 interface HeaderProps {
   onMenuToggle: () => void
@@ -9,9 +10,10 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onMenuToggle, title }) => {
   const { user } = useAuth()
+  const [showNotifications, setShowNotifications] = React.useState(false)
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+    <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 relative">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <button
@@ -24,9 +26,11 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle, title }) => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <button className="p-2 rounded-md hover:bg-gray-100 relative">
+          <button 
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="p-2 rounded-md hover:bg-gray-100 relative"
+          >
             <Bell className="h-5 w-5 text-gray-600" />
-            <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
           </button>
           <div className="flex items-center space-x-3">
             <div className="text-right hidden sm:block">
@@ -41,6 +45,19 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle, title }) => {
           </div>
         </div>
       </div>
+      
+      {/* Notification Panel */}
+      {showNotifications && (
+        <>
+          <div 
+            className="fixed inset-0 z-40" 
+            onClick={() => setShowNotifications(false)}
+          />
+          <div className="absolute right-6 top-full mt-2 z-50">
+            <NotificationPanel onClose={() => setShowNotifications(false)} />
+          </div>
+        </>
+      )}
     </header>
   )
 }
