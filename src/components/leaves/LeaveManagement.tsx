@@ -19,15 +19,13 @@ interface LeaveRequest {
   status: string
   manager_notes: string | null
   hr_notes: string | null
-  is_visible_to_hr: boolean
-  manager_approved_at: string | null
-  hr_approved_at: string | null
   approved_by_manager: string | null
   approved_by_hr: string | null
   created_at: string
   employees?: { name: string; department: string }
   workflow_history?: Array<{
     id: string
+    leave_request_id: string
     action_by: string
     action_type: string
     notes: string | null
@@ -85,11 +83,8 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           // Manager has no team members, show empty result
           query = query.eq('employee_id', 'no-team-members')
         }
-      } else if (user?.employee.role === 'HR') {
-        // HR sees only leaves that are visible to HR (manager approved or HR/Admin created)
-        query = query.eq('is_visible_to_hr', true)
       }
-      // HR and Admin see all leaves
+      // HR and Admin see all leaves (no additional filtering needed)
 
       const { data, error } = await query
       if (error) throw error
@@ -149,6 +144,17 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           .single()
 
         if (error) throw error
+        
+        // Create initial workflow history entry
+        await supabase
+          .from('leave_workflow_history')
+          .insert([{
+            leave_request_id: newLeave.id,
+            action_by: user!.employee.id,
+            action_type: 'submitted',
+            notes: formData.reason || null
+          }])
+        
         setMessage({ type: 'success', text: 'Leave request submitted successfully' })
 
         // Call the callback to navigate to leaves tab
@@ -214,7 +220,9 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
 
   const handleApproveReject = async (leave: LeaveRequest, action: 'approve' | 'reject', notes: string = '') => {
     try {
-      let updateData: any = {}
+      let updateData: any = {
+        status: action === 'approve' ? 'Approved' : 'Rejected'
+      }
       let notificationTitle = ''
       let notificationMessage = ''
       let notificationType: 'leave_approved' | 'leave_rejected' | 'leave_manager_approved' = 'leave_approved'
@@ -222,31 +230,21 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
 
       if (action === 'approve') {
         if (user?.employee.role === 'Manager') {
-          updateData = { 
-            status: 'Manager_Approved', 
-            manager_notes: notes, 
-            approved_by_manager: user.employee.id,
-            is_visible_to_hr: true,
-            manager_approved_at: new Date().toISOString()
-          }
+          updateData.manager_notes = notes
+          updateData.approved_by_manager = user.employee.id
           workflowActionType = 'manager_approved'
-          notificationTitle = 'Leave Request Approved by Manager'
+          notificationTitle = 'Leave Request Approved'
           notificationMessage = `Your ${leave.type} leave request has been approved by your manager.`
-          notificationType = 'leave_manager_approved'
+          notificationType = 'leave_approved'
         } else if (user?.employee.role === 'HR') {
-          updateData = { 
-            status: 'Approved', 
-            hr_notes: notes, 
-            approved_by_hr: user.employee.id,
-            hr_approved_at: new Date().toISOString()
-          }
+          updateData.hr_notes = notes
+          updateData.approved_by_hr = user.employee.id
           workflowActionType = 'hr_approved'
           notificationTitle = 'Leave Request Approved'
-          notificationMessage = `Your ${leave.type} leave request has been fully approved by HR.`
+          notificationMessage = `Your ${leave.type} leave request has been approved by HR.`
           notificationType = 'leave_approved'
         }
       } else {
-        updateData.status = 'Rejected'
         workflowActionType = 'rejected'
         if (user?.employee.role === 'Manager') {
           updateData.manager_notes = notes
@@ -292,25 +290,6 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         )
       }
 
-      // If manager approved, notify HR
-      if (user?.employee.role === 'Manager' && action === 'approve') {
-        const { data: hrUsers } = await supabase
-          .from('employees')
-          .select('id')
-          .eq('role', 'HR')
-
-        if (hrUsers && hrUsers.length > 0) {
-          for (const hrUser of hrUsers) {
-            await createNotification(
-              hrUser.id,
-              'Leave Request Needs HR Approval',
-              `A ${leave.type} leave request from ${leave.employees?.name} has been approved by manager and needs final HR approval.`,
-              'leave_manager_approved',
-              leave.id
-            )
-          }
-        }
-      }
       setMessage({ type: 'success', text: `Leave request ${action}d successfully` })
       fetchLeaves()
     } catch (error: any) {
@@ -332,10 +311,10 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
   }
 
   const canApprove = (leave: LeaveRequest) => {
-    if (user?.employee.role === 'Manager' && leave.status === 'Pending' && !leave.approved_by_manager) {
+    if (user?.employee.role === 'Manager' && leave.status === 'Pending') {
       return true
     }
-    if (user?.employee.role === 'HR' && leave.status === 'Pending' && leave.is_visible_to_hr) {
+    if (user?.employee.role === 'HR' && leave.status === 'Pending') {
       return true
     }
     return false
@@ -418,8 +397,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           >
             <option value="all">All Status</option>
             <option value="Pending">Pending</option>
-            <option value="Manager_Approved">Manager Approved</option>
-            <option value="HR_Approved">HR Approved</option>
+            <option value="Approved">Approved</option>
             <option value="Rejected">Rejected</option>
           </select>
         </div>
@@ -482,7 +460,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
                   
                   <div className="flex items-center space-x-2">
                     {/* Employee actions */}
-                    {user?.employee.employee_id === leave.employee_id && leave.status === 'Pending' && !leave.approved_by_manager && (
+                    {user?.employee.employee_id === leave.employee_id && leave.status === 'Pending' && (
                       <>
                         <button
                           onClick={() => handleEdit(leave)}
@@ -530,175 +508,244 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
 
       {/* Workflow History Modal */}
       {showWorkflowHistory && selectedLeave && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Workflow History - {selectedLeave.type} Leave
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowWorkflowHistory(false)
-                    setSelectedLeave(null)
-                  }}
-                  className="p-2 hover:bg-gray-100 rounded transition-colors"
-                >
-                  <X className="h-4 w-4 text-gray-400" />
-                </button>
-              </div>
-              <p className="text-sm text-gray-600 mt-1">
-                {selectedLeave.employees?.name} • {selectedLeave.days_requested} days • {new Date(selectedLeave.start_date).toLocaleDateString()} - {new Date(selectedLeave.end_date).toLocaleDateString()}
-              </p>
-            </div>
-            
-            <div className="p-6">
-              <div className="space-y-4">
-                {selectedLeave.workflow_history?.map((history, index) => (
-                  <div key={history.id} className="flex items-start space-x-4">
-                    <div className="flex-shrink-0">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        history.action_type === 'submitted' ? 'bg-blue-100' :
-                        history.action_type === 'manager_approved' ? 'bg-green-100' :
-                        history.action_type === 'hr_approved' ? 'bg-green-100' :
-                        history.action_type === 'auto_approved' ? 'bg-purple-100' :
-                        'bg-red-100'
-                      }`}>
-                        {history.action_type === 'submitted' && <FileText className="h-4 w-4 text-blue-600" />}
-                        {(history.action_type === 'manager_approved' || history.action_type === 'hr_approved' || history.action_type === 'auto_approved') && <CheckCircle className="h-4 w-4 text-green-600" />}
-                        {history.action_type === 'rejected' && <XCircle className="h-4 w-4 text-red-600" />}
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <p className="font-medium text-gray-900">{history.actor.name}</p>
-                        <span className="text-xs text-gray-500">({history.actor.role})</span>
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        {history.action_type === 'submitted' && 'Submitted leave request'}
-                        {history.action_type === 'manager_approved' && 'Approved by Manager'}
-                        {history.action_type === 'hr_approved' && 'Approved by HR'}
-                        {history.action_type === 'auto_approved' && 'Auto-approved'}
-                        {history.action_type === 'rejected' && 'Rejected'}
-                      </p>
-                      {history.notes && (
-                        <p className="text-sm text-gray-500 mt-1 italic">"{history.notes}"</p>
-                      )}
-                      <p className="text-xs text-gray-400 mt-1">
-                        {new Date(history.created_at).toLocaleDateString()} at {new Date(history.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                    {index < (selectedLeave.workflow_history?.length || 0) - 1 && (
-                      <div className="absolute left-4 mt-8 w-px h-6 bg-gray-200"></div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        <WorkflowHistoryModal 
+          leave={selectedLeave}
+          onClose={() => {
+            setShowWorkflowHistory(false)
+            setSelectedLeave(null)
+          }}
+        />
       )}
 
       {/* Leave Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-screen overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {editingLeave ? 'Edit Leave Request' : 'New Leave Request'}
-              </h3>
+        <LeaveFormModal
+          formData={formData}
+          setFormData={setFormData}
+          onSubmit={handleSubmit}
+          onClose={() => {
+            setShowForm(false)
+            setEditingLeave(null)
+            setFormData({ type: 'Annual', start_date: '', end_date: '', reason: '' })
+          }}
+          loading={loading}
+          editingLeave={editingLeave}
+          calculateDays={calculateDays}
+        />
+      )}
+    </div>
+  )
+}
+
+// Separate component for Workflow History Modal
+const WorkflowHistoryModal: React.FC<{
+  leave: LeaveRequest
+  onClose: () => void
+}> = ({ leave, onClose }) => {
+  const [workflowHistory, setWorkflowHistory] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchWorkflowHistory()
+  }, [leave.id])
+
+  const fetchWorkflowHistory = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('leave_workflow_history')
+        .select(`
+          *,
+          actor:action_by (name, role)
+        `)
+        .eq('leave_request_id', leave.id)
+        .order('created_at', { ascending: true })
+
+      if (error) throw error
+      setWorkflowHistory(data || [])
+    } catch (error) {
+      console.error('Error fetching workflow history:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Workflow History - {leave.type} Leave
+            </h3>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded transition-colors"
+            >
+              <X className="h-4 w-4 text-gray-400" />
+            </button>
+          </div>
+          <p className="text-sm text-gray-600 mt-1">
+            {leave.employees?.name} • {leave.days_requested} days • {new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}
+          </p>
+        </div>
+        
+        <div className="p-6">
+          {loading ? (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {workflowHistory.map((history, index) => (
+                <div key={history.id} className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      history.action_type === 'submitted' ? 'bg-blue-100' :
+                      history.action_type === 'manager_approved' ? 'bg-green-100' :
+                      history.action_type === 'hr_approved' ? 'bg-green-100' :
+                      history.action_type === 'auto_approved' ? 'bg-purple-100' :
+                      'bg-red-100'
+                    }`}>
+                      {history.action_type === 'submitted' && <FileText className="h-4 w-4 text-blue-600" />}
+                      {(history.action_type === 'manager_approved' || history.action_type === 'hr_approved' || history.action_type === 'auto_approved') && <CheckCircle className="h-4 w-4 text-green-600" />}
+                      {history.action_type === 'rejected' && <XCircle className="h-4 w-4 text-red-600" />}
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <p className="font-medium text-gray-900">{history.actor.name}</p>
+                      <span className="text-xs text-gray-500">({history.actor.role})</span>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {history.action_type === 'submitted' && 'Submitted leave request'}
+                      {history.action_type === 'manager_approved' && 'Approved by Manager'}
+                      {history.action_type === 'hr_approved' && 'Approved by HR'}
+                      {history.action_type === 'auto_approved' && 'Auto-approved'}
+                      {history.action_type === 'rejected' && 'Rejected'}
+                    </p>
+                    {history.notes && (
+                      <p className="text-sm text-gray-500 mt-1 italic">"{history.notes}"</p>
+                    )}
+                    <p className="text-xs text-gray-400 mt-1">
+                      {new Date(history.created_at).toLocaleDateString()} at {new Date(history.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  {index < workflowHistory.length - 1 && (
+                    <div className="absolute left-4 mt-8 w-px h-6 bg-gray-200"></div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Separate component for Leave Form Modal
+const LeaveFormModal: React.FC<{
+  formData: any
+  setFormData: (data: any) => void
+  onSubmit: (e: React.FormEvent) => void
+  onClose: () => void
+  loading: boolean
+  editingLeave: LeaveRequest | null
+  calculateDays: (start: string, end: string) => number
+}> = ({ formData, setFormData, onSubmit, onClose, loading, editingLeave, calculateDays }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-screen overflow-y-auto">
+        <div className="p-6 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">
+            {editingLeave ? 'Edit Leave Request' : 'New Leave Request'}
+          </h3>
+        </div>
+        
+        <form onSubmit={onSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Leave Type
+            </label>
+            <select
+              value={formData.type}
+              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            >
+              <option value="Annual">Annual Leave</option>
+              <option value="Sick">Sick Leave</option>
+              <option value="Personal">Personal Leave</option>
+              <option value="Maternity">Maternity Leave</option>
+              <option value="Paternity">Paternity Leave</option>
+              <option value="Emergency">Emergency Leave</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={formData.start_date}
+                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                required
+              />
             </div>
             
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Leave Type
-                </label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                >
-                  <option value="Annual">Annual Leave</option>
-                  <option value="Sick">Sick Leave</option>
-                  <option value="Personal">Personal Leave</option>
-                  <option value="Maternity">Maternity Leave</option>
-                  <option value="Paternity">Paternity Leave</option>
-                  <option value="Emergency">Emergency Leave</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.start_date}
-                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.end_date}
-                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                    required
-                  />
-                </div>
-              </div>
-
-              {formData.start_date && formData.end_date && (
-                <div className="text-sm text-gray-600">
-                  Duration: {calculateDays(formData.start_date, formData.end_date)} days
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reason (Optional)
-                </label>
-                <textarea
-                  value={formData.reason}
-                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  rows={3}
-                  placeholder="Reason for leave..."
-                />
-              </div>
-
-              <div className="flex space-x-3 pt-4">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {loading ? 'Saving...' : (editingLeave ? 'Update Request' : 'Submit Request')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowForm(false)
-                    setEditingLeave(null)
-                    setFormData({ type: 'Annual', start_date: '', end_date: '', reason: '' })
-                  }}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                End Date
+              </label>
+              <input
+                type="date"
+                value={formData.end_date}
+                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                required
+              />
+            </div>
           </div>
-        </div>
-      )}
+
+          {formData.start_date && formData.end_date && (
+            <div className="text-sm text-gray-600">
+              Duration: {calculateDays(formData.start_date, formData.end_date)} days
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Reason (Optional)
+            </label>
+            <textarea
+              value={formData.reason}
+              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              rows={3}
+              placeholder="Reason for leave..."
+            />
+          </div>
+
+          <div className="flex space-x-3 pt-4">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading ? 'Saving...' : (editingLeave ? 'Update Request' : 'Submit Request')}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

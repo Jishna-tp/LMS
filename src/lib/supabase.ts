@@ -81,8 +81,6 @@ export type Database = {
           status: 'Pending' | 'Approved' | 'Rejected'
           manager_notes: string | null
           hr_notes: string | null
-          approved_by_manager: string | null
-          approved_by_hr: string | null
           created_at: string
           updated_at: string
         }
@@ -97,8 +95,6 @@ export type Database = {
           status?: 'Pending' | 'Approved' | 'Rejected'
           manager_notes?: string | null
           hr_notes?: string | null
-          approved_by_manager?: string | null
-          approved_by_hr?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -113,8 +109,6 @@ export type Database = {
           status?: 'Pending' | 'Approved' | 'Rejected'
           manager_notes?: string | null
           hr_notes?: string | null
-          approved_by_manager?: string | null
-          approved_by_hr?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -124,7 +118,7 @@ export type Database = {
           id: string
           leave_request_id: string
           action_by: string
-          action_type: 'submitted' | 'manager_approved' | 'hr_approved' | 'rejected' | 'auto_approved'
+          action_type: 'submitted' | 'approved' | 'rejected'
           notes: string | null
           created_at: string
         }
@@ -132,7 +126,7 @@ export type Database = {
           id?: string
           leave_request_id: string
           action_by: string
-          action_type: 'submitted' | 'manager_approved' | 'hr_approved' | 'rejected' | 'auto_approved'
+          action_type: 'submitted' | 'approved' | 'rejected'
           notes?: string | null
           created_at?: string
         }
@@ -140,7 +134,7 @@ export type Database = {
           id?: string
           leave_request_id?: string
           action_by?: string
-          action_type?: 'submitted' | 'manager_approved' | 'hr_approved' | 'rejected' | 'auto_approved'
+          action_type?: 'submitted' | 'approved' | 'rejected'
           notes?: string | null
           created_at?: string
         }
