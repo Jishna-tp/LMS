@@ -16,7 +16,7 @@ export const createNotification = async (
   userId: string,
   title: string,
   message: string,
-  type: Notification['type'],
+  type: 'leave_approved' | 'leave_rejected' | 'leave_submitted' | 'leave_manager_approved',
   relatedLeaveId?: string
 ) => {
   try {

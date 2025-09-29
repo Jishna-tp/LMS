@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Bell, Check, CheckCheck, Clock, Calendar, X } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { supabase } from '../../lib/supabase'
 import { 
   getUserNotifications, 
   markNotificationAsRead, 
@@ -10,9 +11,10 @@ import {
 
 interface NotificationPanelProps {
   onClose: () => void
+  onLeaveClick?: (leaveId: string) => void
 }
 
-export const NotificationPanel: React.FC<NotificationPanelProps> = ({ onClose }) => {
+export const NotificationPanel: React.FC<NotificationPanelProps> = ({ onClose, onLeaveClick }) => {
   const { user } = useAuth()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
@@ -53,6 +55,19 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ onClose })
     const result = await markAllNotificationsAsRead(user.employee.id)
     if (result.success) {
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
+    }
+  }
+
+  const handleNotificationClick = async (notification: Notification) => {
+    // Mark as read
+    if (!notification.is_read) {
+      await handleMarkAsRead(notification.id)
+    }
+    
+    // Navigate to leave if it's a leave-related notification
+    if (notification.related_leave_id && onLeaveClick) {
+      onLeaveClick(notification.related_leave_id)
+      onClose()
     }
   }
 
@@ -123,7 +138,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ onClose })
                 className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
                   !notification.is_read ? 'bg-blue-50' : ''
                 }`}
-                onClick={() => !notification.is_read && handleMarkAsRead(notification.id)}
+                onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex items-start space-x-3">
                   <div className="flex-shrink-0 mt-1">
