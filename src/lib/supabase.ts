@@ -78,14 +78,11 @@ export type Database = {
           end_date: string
           days_requested: number
           reason: string | null
-          status: 'Pending' | 'Manager_Approved' | 'HR_Approved' | 'Rejected'
+          status: 'Pending' | 'Approved' | 'Rejected'
           manager_notes: string | null
           hr_notes: string | null
           approved_by_manager: string | null
           approved_by_hr: string | null
-          is_visible_to_hr: boolean
-          manager_approved_at: string | null
-          hr_approved_at: string | null
           created_at: string
           updated_at: string
         }
@@ -97,14 +94,11 @@ export type Database = {
           end_date: string
           days_requested: number
           reason?: string | null
-          status?: 'Pending' | 'Manager_Approved' | 'HR_Approved' | 'Rejected'
+          status?: 'Pending' | 'Approved' | 'Rejected'
           manager_notes?: string | null
           hr_notes?: string | null
           approved_by_manager?: string | null
           approved_by_hr?: string | null
-          is_visible_to_hr?: boolean
-          manager_approved_at?: string | null
-          hr_approved_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -116,14 +110,11 @@ export type Database = {
           end_date?: string
           days_requested?: number
           reason?: string | null
-          status?: 'Pending' | 'Manager_Approved' | 'HR_Approved' | 'Rejected'
+          status?: 'Pending' | 'Approved' | 'Rejected'
           manager_notes?: string | null
           hr_notes?: string | null
           approved_by_manager?: string | null
           approved_by_hr?: string | null
-          is_visible_to_hr?: boolean
-          manager_approved_at?: string | null
-          hr_approved_at?: string | null
           created_at?: string
           updated_at?: string
         }
