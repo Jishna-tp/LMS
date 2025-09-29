@@ -418,7 +418,8 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           >
             <option value="all">All Status</option>
             <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
+            <option value="Manager_Approved">Manager Approved</option>
+            <option value="HR_Approved">HR Approved</option>
             <option value="Rejected">Rejected</option>
           </select>
         </div>
