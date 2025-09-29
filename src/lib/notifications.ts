@@ -5,7 +5,7 @@ export interface Notification {
   user_id: string
   title: string
   message: string
-  type: 'leave_approved' | 'leave_rejected' | 'leave_submitted' | 'leave_manager_approved'
+  type: 'leave_approved' | 'leave_rejected' | 'leave_submitted'
   is_read: boolean
   related_leave_id: string | null
   created_at: string
@@ -16,7 +16,7 @@ export const createNotification = async (
   userId: string,
   title: string,
   message: string,
-  type: Notification['type'],
+  type: 'leave_approved' | 'leave_rejected' | 'leave_submitted',
   relatedLeaveId?: string
 ) => {
   try {

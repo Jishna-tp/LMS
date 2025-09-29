@@ -19,8 +19,6 @@ interface LeaveRequest {
   status: string
   manager_notes: string | null
   hr_notes: string | null
-  approved_by_manager: string | null
-  approved_by_hr: string | null
   created_at: string
   employees?: { name: string; department: string }
   workflow_history?: Array<{
@@ -62,7 +60,15 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         .from('leave_requests')
         .select(`
           *,
-          employees:employee_id (name, department)
+          employees:employee_id (name, department),
+          workflow_history:leave_workflow_history (
+            id,
+            action_by,
+            action_type,
+            notes,
+            created_at,
+            actor:employees!leave_workflow_history_action_by_fkey (name, role)
+          )
         `)
         .order('created_at', { ascending: false })
 
@@ -83,8 +89,9 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           // Manager has no team members, show empty result
           query = query.eq('employee_id', 'no-team-members')
         }
+      } else if (user?.employee.role === 'HR') {
+        // HR sees all leaves
       }
-      // HR and Admin see all leaves (no additional filtering needed)
 
       const { data, error } = await query
       if (error) throw error
@@ -225,35 +232,24 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
       }
       let notificationTitle = ''
       let notificationMessage = ''
-      let notificationType: 'leave_approved' | 'leave_rejected' | 'leave_manager_approved' = 'leave_approved'
-      let workflowActionType = ''
+      let notificationType: 'leave_approved' | 'leave_rejected' = action === 'approve' ? 'leave_approved' : 'leave_rejected'
 
       if (action === 'approve') {
+        notificationTitle = 'Leave Request Approved'
+        notificationMessage = `Your ${leave.type} leave request has been approved.`
         if (user?.employee.role === 'Manager') {
           updateData.manager_notes = notes
-          updateData.approved_by_manager = user.employee.id
-          workflowActionType = 'manager_approved'
-          notificationTitle = 'Leave Request Approved'
-          notificationMessage = `Your ${leave.type} leave request has been approved by your manager.`
-          notificationType = 'leave_approved'
         } else if (user?.employee.role === 'HR') {
           updateData.hr_notes = notes
-          updateData.approved_by_hr = user.employee.id
-          workflowActionType = 'hr_approved'
-          notificationTitle = 'Leave Request Approved'
-          notificationMessage = `Your ${leave.type} leave request has been approved by HR.`
-          notificationType = 'leave_approved'
         }
       } else {
-        workflowActionType = 'rejected'
+        notificationTitle = 'Leave Request Rejected'
+        notificationMessage = `Your ${leave.type} leave request has been rejected. ${notes ? `Reason: ${notes}` : ''}`
         if (user?.employee.role === 'Manager') {
           updateData.manager_notes = notes
         } else if (user?.employee.role === 'HR') {
           updateData.hr_notes = notes
         }
-        notificationTitle = 'Leave Request Rejected'
-        notificationMessage = `Your ${leave.type} leave request has been rejected. ${notes ? `Reason: ${notes}` : ''}`
-        notificationType = 'leave_rejected'
       }
 
       const { error } = await supabase
@@ -269,7 +265,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         .insert([{
           leave_request_id: leave.id,
           action_by: user!.employee.id,
-          action_type: workflowActionType,
+          action_type: action === 'approve' ? 'approved' : 'rejected',
           notes: notes || null
         }])
 
@@ -601,13 +597,11 @@ const WorkflowHistoryModal: React.FC<{
                   <div className="flex-shrink-0">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                       history.action_type === 'submitted' ? 'bg-blue-100' :
-                      history.action_type === 'manager_approved' ? 'bg-green-100' :
-                      history.action_type === 'hr_approved' ? 'bg-green-100' :
-                      history.action_type === 'auto_approved' ? 'bg-purple-100' :
+                      history.action_type === 'approved' ? 'bg-green-100' :
                       'bg-red-100'
                     }`}>
                       {history.action_type === 'submitted' && <FileText className="h-4 w-4 text-blue-600" />}
-                      {(history.action_type === 'manager_approved' || history.action_type === 'hr_approved' || history.action_type === 'auto_approved') && <CheckCircle className="h-4 w-4 text-green-600" />}
+                      {history.action_type === 'approved' && <CheckCircle className="h-4 w-4 text-green-600" />}
                       {history.action_type === 'rejected' && <XCircle className="h-4 w-4 text-red-600" />}
                     </div>
                   </div>
@@ -618,9 +612,7 @@ const WorkflowHistoryModal: React.FC<{
                     </div>
                     <p className="text-sm text-gray-600">
                       {history.action_type === 'submitted' && 'Submitted leave request'}
-                      {history.action_type === 'manager_approved' && 'Approved by Manager'}
-                      {history.action_type === 'hr_approved' && 'Approved by HR'}
-                      {history.action_type === 'auto_approved' && 'Auto-approved'}
+                      {history.action_type === 'approved' && 'Approved'}
                       {history.action_type === 'rejected' && 'Rejected'}
                     </p>
                     {history.notes && (
