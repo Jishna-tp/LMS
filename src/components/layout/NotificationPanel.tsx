@@ -79,6 +79,8 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ onClose, o
         return <X className="h-4 w-4 text-red-600" />
       case 'leave_submitted':
         return <Calendar className="h-4 w-4 text-blue-600" />
+      case 'leave_manager_approved':
+        return <CheckCheck className="h-4 w-4 text-blue-600" />
       default:
         return <Bell className="h-4 w-4 text-gray-600" />
     }

@@ -53,12 +53,12 @@ export const Dashboard: React.FC = () => {
         const { count: pendingCount } = await supabase
           .from('leave_requests')
           .select('*', { count: 'exact' })
-          .eq('status', 'Pending')
+          .in('status', ['Pending', 'Manager_Approved'])
         
         const { count: approvedCount } = await supabase
           .from('leave_requests')
           .select('*', { count: 'exact' })
-          .eq('status', 'Approved')
+          .in('status', ['HR_Approved', 'Approved'])
 
         pendingLeaves = pendingCount || 0
         approvedLeaves = approvedCount || 0
@@ -112,13 +112,18 @@ export const Dashboard: React.FC = () => {
       case 'Pending': return 'text-yellow-600 bg-yellow-50'
       case 'Manager_Approved': return 'text-blue-600 bg-blue-50'
       case 'HR_Approved': return 'text-green-600 bg-green-50'
+      case 'Approved': return 'text-green-600 bg-green-50'
       case 'Rejected': return 'text-red-600 bg-red-50'
       default: return 'text-gray-600 bg-gray-50'
     }
   }
 
   const formatStatus = (status: string) => {
-    return status
+    switch (status) {
+      case 'Manager_Approved': return 'Manager Approved'
+      case 'HR_Approved': return 'HR Approved'
+      default: return status
+    }
   }
 
   if (loading) {

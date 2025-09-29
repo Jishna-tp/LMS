@@ -296,6 +296,8 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Pending': return 'text-yellow-600 bg-yellow-50 border-yellow-200'
+      case 'Manager_Approved': return 'text-blue-600 bg-blue-50 border-blue-200'
+      case 'HR_Approved': return 'text-green-600 bg-green-50 border-green-200'
       case 'Approved': return 'text-green-600 bg-green-50 border-green-200'
       case 'Rejected': return 'text-red-600 bg-red-50 border-red-200'
       default: return 'text-gray-600 bg-gray-50 border-gray-200'
@@ -303,7 +305,11 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
   }
 
   const formatStatus = (status: string) => {
-    return status
+    switch (status) {
+      case 'Manager_Approved': return 'Manager Approved'
+      case 'HR_Approved': return 'HR Approved'
+      default: return status
+    }
   }
 
   const canApprove = (leave: LeaveRequest) => {
@@ -393,6 +399,8 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           >
             <option value="all">All Status</option>
             <option value="Pending">Pending</option>
+            <option value="Manager_Approved">Manager Approved</option>
+            <option value="HR_Approved">HR Approved</option>
             <option value="Approved">Approved</option>
             <option value="Rejected">Rejected</option>
           </select>
