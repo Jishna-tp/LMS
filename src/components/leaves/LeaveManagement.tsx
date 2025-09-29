@@ -223,7 +223,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
       if (action === 'approve') {
         if (user?.employee.role === 'Manager') {
           updateData = { 
-            status: 'Pending', 
+            status: 'Manager_Approved', 
             manager_notes: notes, 
             approved_by_manager: user.employee.id,
             is_visible_to_hr: true,
