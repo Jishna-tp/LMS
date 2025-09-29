@@ -142,7 +142,8 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
             start_date: formData.start_date,
             end_date: formData.end_date,
             days_requested: days,
-            reason: formData.reason
+            reason: formData.reason,
+            status: 'Pending'
           }])
           .select()
           .single()
