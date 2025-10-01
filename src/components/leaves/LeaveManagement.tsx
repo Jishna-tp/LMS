@@ -55,7 +55,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
   const [selectedLeave, setSelectedLeave] = useState<LeaveRequest | null>(null)
   const [showWorkflowHistory, setShowWorkflowHistory] = useState(false)
   const [editingLeave, setEditingLeave] = useState<LeaveRequest | null>(null)
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState('Pending')
   const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     type: 'Annual',
