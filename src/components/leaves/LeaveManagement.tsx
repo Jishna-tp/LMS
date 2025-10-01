@@ -108,8 +108,9 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
             query = query.eq('employee_id', 'no-team-members')
           }
         } else if (user?.employee.role === 'HR') {
-          // HR sees all pending requests and manager-approved requests
-          query = query.in('status', ['Pending', 'Manager_Approved'])
+          // HR sees approved requests that need final HR approval (where manager has approved but HR hasn't)
+          // We need to check if the request has manager approval but not HR approval
+          query = query.eq('status', 'Approved').not('approved_by_hr', 'is', null)
         } else {
           // Other roles don't have approve tab
           query = query.eq('employee_id', 'no-approval-access')
@@ -163,9 +164,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         steps.push({
           role: 'Manager',
           name: 'Line Manager',
-          status: leave.status === 'Pending' ? 'pending' :
-                 leave.status === 'Manager_Approved' ? 'approved' :
-                 leave.status === 'Approved' ? 'approved' :
+          status: leave.approved_by_manager ? 'approved' :
                  leave.status === 'Rejected' ? 'rejected' : 'pending'
         })
       }
@@ -173,9 +172,9 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
       steps.push({
         role: 'HR',
         name: 'HR Team',
-        status: leave.status === 'Approved' ? 'approved' :
+        status: leave.approved_by_hr ? 'approved' :
                leave.status === 'Rejected' ? 'rejected' :
-               leave.status === 'Manager_Approved' ? 'pending' : 'pending'
+               leave.approved_by_manager ? 'pending' : 'pending'
       })
     }
 
@@ -349,10 +348,10 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
       // Determine new status based on current user role and leave status
       if (user?.employee.role === 'Manager') {
         if (action === 'approve') {
-          newStatus = 'Manager_Approved'
-          notificationTitle = 'Leave Request - Manager Approved'
+          newStatus = 'Approved'
+          notificationTitle = 'Leave Request Approved'
           notificationMessage = `Your ${leave.type} leave request has been approved by your manager and is now pending HR approval.`
-          notificationType = 'leave_manager_approved'
+          notificationType = 'leave_approved'
         } else {
           newStatus = 'Rejected'
           notificationTitle = 'Leave Request Rejected'
@@ -377,8 +376,12 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
       let updateData: any = { status: newStatus }
       if (user?.employee.role === 'Manager') {
         updateData.manager_notes = notes
+        updateData.approved_by_manager = user.employee.id
+        updateData.manager_approved_at = new Date().toISOString()
       } else if (user?.employee.role === 'HR') {
         updateData.hr_notes = notes
+        updateData.approved_by_hr = user.employee.id
+        updateData.hr_approved_at = new Date().toISOString()
       }
 
       const { error } = await supabase
@@ -455,10 +458,10 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
   }
 
   const canApprove = (leave: LeaveRequest) => {
-    if (user?.employee.role === 'Manager' && leave.status === 'Pending') {
+    if (user?.employee.role === 'Manager' && leave.status === 'Pending' && !leave.approved_by_manager) {
       return true
     }
-    if (user?.employee.role === 'HR' && (leave.status === 'Pending' || leave.status === 'Manager_Approved')) {
+    if (user?.employee.role === 'HR' && leave.status === 'Approved' && leave.approved_by_manager && !leave.approved_by_hr) {
       return true
     }
     return false

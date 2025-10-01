@@ -58,7 +58,8 @@ export const Dashboard: React.FC = () => {
         const { count: approvedCount } = await supabase
           .from('leave_requests')
           .select('*', { count: 'exact' })
-          .in('status', ['HR_Approved', 'Approved'])
+          .eq('status', 'Approved')
+          .not('approved_by_hr', 'is', null)
 
         pendingLeaves = pendingCount || 0
         approvedLeaves = approvedCount || 0
