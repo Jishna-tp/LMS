@@ -858,24 +858,15 @@ const WorkflowHistoryModal: React.FC<{
               <div className="space-y-4">
                 {workflowHistory.map((history, index) => (
                   <div key={history.id} className="flex items-start space-x-4">
-                        {step.status === 'skipped' && <X className="h-4 w-4 text-gray-600" />}
                     <div className="flex-shrink-0">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                         history.action_type === 'submitted' ? 'bg-blue-100' :
                         history.action_type === 'approved' ? 'bg-green-100' :
-                        <p className="text-xs text-gray-500 capitalize">
-                          {step.status === 'skipped' ? 'Skipped' : step.status}
-                        </p>
                         'bg-red-100'
                       }`}>
                         {history.action_type === 'submitted' && <FileText className="h-4 w-4 text-blue-600" />}
                         {history.action_type === 'approved' && <CheckCircle className="h-4 w-4 text-green-600" />}
                         {history.action_type === 'rejected' && <XCircle className="h-4 w-4 text-red-600" />}
-                        {step.notes && step.status === 'rejected' && (
-                          <p className="text-xs text-red-600 italic mt-1" title={step.notes}>
-                            Reason provided
-                          </p>
-                        )}
                       </div>
                     </div>
                     <div className="flex-1">
