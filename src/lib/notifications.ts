@@ -91,6 +91,12 @@ export const markAllNotificationsAsRead = async (userId: string) => {
 // Get unread notification count
 export const getUnreadNotificationCount = async (userId: string) => {
   try {
+    // Check if Supabase is properly configured
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      console.warn('Supabase environment variables not configured')
+      return { success: false, count: 0 }
+    }
+
     const { count, error } = await supabase
       .from('notifications')
       .select('*', { count: 'exact' })
@@ -100,7 +106,7 @@ export const getUnreadNotificationCount = async (userId: string) => {
     if (error) throw error
     return { success: true, count: count || 0 }
   } catch (error: any) {
-    console.error('Error getting unread notification count:', error)
+    console.warn('Error getting unread notification count:', error.message || error)
     return { success: false, count: 0 }
   }
 }
