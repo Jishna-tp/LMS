@@ -108,9 +108,12 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
             query = query.eq('employee_id', 'no-team-members')
           }
         } else if (user?.employee.role === 'HR') {
-          // HR sees approved requests that need final HR approval (where manager has approved but HR hasn't)
-          // We need to check if the request has manager approval but not HR approval
-          query = query.eq('status', 'Approved').not('approved_by_hr', 'is', null)
+          // HR sees requests that need HR approval:
+          // 1. Requests approved by manager but not yet by HR
+          // 2. Direct requests from Admin/Manager roles
+          query = query
+            .eq('status', 'Approved')
+            .is('approved_by_hr', null)
         } else {
           // Other roles don't have approve tab
           query = query.eq('employee_id', 'no-approval-access')
