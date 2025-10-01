@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase, isSupabaseConfigured } from './supabase'
 
 export interface Notification {
   id: string
@@ -40,6 +40,10 @@ export const createNotification = async (
 
 // Get user notifications
 export const getUserNotifications = async (userId: string) => {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured', data: [] }
+  }
+
   try {
     const { data, error } = await supabase
       .from('notifications')
@@ -89,18 +93,22 @@ export const markAllNotificationsAsRead = async (userId: string) => {
 }
 
 // Get unread notification count
-export const getUnreadNotificationCount = async (userId: string) => {
+export const getUnreadNotificationCount = async (userId: string): Promise<number> => {
   try {
-    const { count, error } = await supabase
+    const { data, error } = await supabase
       .from('notifications')
-      .select('*', { count: 'exact' })
+      .select('id', { count: 'exact' })
       .eq('user_id', userId)
       .eq('is_read', false)
 
-    if (error) throw error
-    return { success: true, count: count || 0 }
-  } catch (error: any) {
-    console.error('Error getting unread notification count:', error)
-    return { success: false, count: 0 }
+    if (error) {
+      console.error('Error fetching unread notification count:', error)
+      return 0
+    }
+
+    return data?.length || 0
+  } catch (networkError) {
+    console.error('Network error fetching unread notification count:', networkError)
+    return 0
   }
 }

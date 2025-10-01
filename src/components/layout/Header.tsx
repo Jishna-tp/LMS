@@ -3,6 +3,7 @@ import { Menu, Bell } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { NotificationPanel } from './NotificationPanel'
 import { getUnreadNotificationCount } from '../../lib/notifications'
+import { isSupabaseConfigured } from '../../lib/supabase'
 
 interface HeaderProps {
   onMenuToggle: () => void
@@ -24,11 +25,15 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle, title }) => {
   }, [user])
 
   const fetchUnreadCount = async () => {
-    if (!user) return
+    if (!user || !isSupabaseConfigured()) return
     
-    const result = await getUnreadNotificationCount(user.employee.id)
-    if (result.success) {
-      setUnreadCount(result.count)
+    try {
+      const result = await getUnreadNotificationCount(user.employee.id)
+      if (result.success) {
+        setUnreadCount(result.count)
+      }
+    } catch (error) {
+      // Silently handle errors to prevent breaking the header
     }
   }
 

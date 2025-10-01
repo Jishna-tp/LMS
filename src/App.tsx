@@ -16,6 +16,13 @@ const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // Reset to dashboard when user changes (sign in/out)
+  React.useEffect(() => {
+    if (user) {
+      setActiveTab('dashboard')
+    }
+  }, [user])
+
   // Handle navigation after form submission
   const handleLeaveSubmitted = () => {
     setActiveTab('leaves')
@@ -66,7 +73,7 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="h-screen w-full bg-gray-50 flex overflow-hidden">
       <Sidebar
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -74,13 +81,13 @@ const AppContent: React.FC = () => {
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
       
-      <div className="flex-1 lg:pl-64">
+      <div className="flex-1 flex flex-col h-full overflow-hidden lg:ml-64">
         <Header
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
           title={getTabTitle(activeTab)}
         />
         
-        <main className="flex-1">
+        <main className="flex-1 overflow-auto">
           {renderContent()}
         </main>
       </div>
