@@ -208,13 +208,13 @@ export const EmployeeManagement: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Employee Management</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Employee Management</h2>
           <p className="text-gray-600">Manage company employees and their information</p>
         </div>
         
         <button
           onClick={() => setShowForm(true)}
-          className="mt-4 sm:mt-0 flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm sm:text-base"
+          className="mt-4 sm:mt-0 flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add Employee
@@ -222,7 +222,7 @@ export const EmployeeManagement: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="mb-6 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+      <div className="mb-6 flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
@@ -234,12 +234,12 @@ export const EmployeeManagement: React.FC = () => {
           />
         </div>
         
-        <div className="relative flex-shrink-0">
+        <div className="relative">
           <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <select
             value={departmentFilter}
             onChange={(e) => setDepartmentFilter(e.target.value)}
-            className="w-full md:w-auto pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none"
+            className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none"
           >
             <option value="all">All Departments</option>
             {departments.map(dept => (
@@ -248,11 +248,11 @@ export const EmployeeManagement: React.FC = () => {
           </select>
         </div>
         
-        <div className="relative flex-shrink-0">
+        <div className="relative">
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none"
           >
             <option value="all">All Roles</option>
             {roles.map(role => (
@@ -263,18 +263,18 @@ export const EmployeeManagement: React.FC = () => {
       </div>
 
       {/* Employee Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredEmployees.map((employee) => (
-          <div key={employee.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
+          <div key={employee.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
-                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold">
                     {employee.name.charAt(0)}
                   </span>
                 </div>
-                <div className="min-w-0">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{employee.name}</h3>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{employee.name}</h3>
                   <p className="text-sm text-gray-500">{employee.employee_id}</p>
                 </div>
               </div>
@@ -298,14 +298,14 @@ export const EmployeeManagement: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-              <div className="flex items-center text-sm text-gray-600 min-w-0">
+              <div className="flex items-center text-sm text-gray-600">
                 <Mail className="h-4 w-4 mr-2 text-gray-400" />
-                <span className="truncate">{employee.email}</span>
+                {employee.email}
               </div>
               
-              <div className="flex items-center text-sm text-gray-600 min-w-0">
+              <div className="flex items-center text-sm text-gray-600">
                 <Building className="h-4 w-4 mr-2 text-gray-400" />
-                <span className="truncate">{employee.department}</span>
+                {employee.department}
               </div>
               
               <div className="flex items-center text-sm text-gray-600">
@@ -315,12 +315,12 @@ export const EmployeeManagement: React.FC = () => {
               
               <div className="flex items-center text-sm text-gray-600">
                 <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                <span className="hidden sm:inline">Hired: </span>{new Date(employee.hire_date).toLocaleDateString()}
+                Hired: {new Date(employee.hire_date).toLocaleDateString()}
               </div>
 
               {employee.manager && (
                 <div className="text-xs text-gray-500">
-                  <span className="hidden sm:inline">Manager: </span>{employee.manager.name}
+                  Manager: {employee.manager.name}
                 </div>
               )}
             </div>

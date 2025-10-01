@@ -91,12 +91,12 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ onClose, o
   const unreadCount = notifications.filter(n => !n.is_read).length
 
   return (
-    <div className="bg-white rounded-lg shadow-xl border border-gray-200 w-72 sm:w-80 md:w-96 max-h-72 sm:max-h-80 md:max-h-96 overflow-hidden">
+    <div className="bg-white rounded-lg shadow-xl border border-gray-200 w-96 max-h-96 overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Bell className="h-5 w-5 text-gray-600" />
-          <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Notifications</h3>
+          <h3 className="font-semibold text-gray-900">Notifications</h3>
           {unreadCount > 0 && (
             <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1">
               {unreadCount}
@@ -107,7 +107,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ onClose, o
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllAsRead}
-              className="text-xs text-blue-600 hover:text-blue-800 transition-colors hidden sm:block"
+              className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
             >
               Mark all read
             </button>
@@ -122,7 +122,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ onClose, o
       </div>
 
       {/* Content */}
-      <div className="max-h-56 sm:max-h-64 md:max-h-80 overflow-y-auto">
+      <div className="max-h-80 overflow-y-auto">
         {loading ? (
           <div className="p-4 text-center">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
@@ -137,7 +137,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ onClose, o
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-3 sm:p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
+                className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
                   !notification.is_read ? 'bg-blue-50' : ''
                 }`}
                 onClick={() => handleNotificationClick(notification)}
@@ -152,13 +152,12 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ onClose, o
                     }`}>
                       {notification.title}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                    <p className="text-xs text-gray-500 mt-1">
                       {notification.message}
                     </p>
                     <p className="text-xs text-gray-400 mt-1 flex items-center">
                       <Clock className="h-3 w-3 mr-1" />
-                      <span className="hidden sm:inline">{new Date(notification.created_at).toLocaleDateString()} </span>
-                      {new Date(notification.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(notification.created_at).toLocaleDateString()} {new Date(notification.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                   {!notification.is_read && (

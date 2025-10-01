@@ -296,13 +296,13 @@ export const Reports: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Reports</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Reports</h2>
           <p className="text-gray-600">Comprehensive leave management analytics and reports</p>
         </div>
         
         <button
           onClick={exportToCSV}
-          className="mt-4 sm:mt-0 flex items-center px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors text-sm sm:text-base"
+          className="mt-4 sm:mt-0 flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
         >
           <Download className="h-4 w-4 mr-2" />
           Export CSV
@@ -310,55 +310,55 @@ export const Reports: React.FC = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
             <div className="p-3 bg-blue-100 rounded-full">
               <FileText className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-500">Total Requests</p>
-              <p className="text-xl sm:text-2xl font-semibold text-gray-900">{filteredLeaves.length}</p>
+              <p className="text-sm font-medium text-gray-500">Total Requests</p>
+              <p className="text-2xl font-semibold text-gray-900">{filteredLeaves.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
             <div className="p-3 bg-green-100 rounded-full">
               <TrendingUp className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-500">Approved</p>
-              <p className="text-xl sm:text-2xl font-semibold text-gray-900">
+              <p className="text-sm font-medium text-gray-500">Approved</p>
+              <p className="text-2xl font-semibold text-gray-900">
                 {filteredLeaves.filter(l => l.status === 'Approved').length}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
             <div className="p-3 bg-yellow-100 rounded-full">
               <Calendar className="h-6 w-6 text-yellow-600" />
             </div>
             <div className="ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-500">Pending</p>
-              <p className="text-xl sm:text-2xl font-semibold text-gray-900">
+              <p className="text-sm font-medium text-gray-500">Pending</p>
+              <p className="text-2xl font-semibold text-gray-900">
                 {filteredLeaves.filter(l => l.status === 'Pending').length}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center">
             <div className="p-3 bg-red-100 rounded-full">
               <Users className="h-6 w-6 text-red-600" />
             </div>
             <div className="ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-500">Rejected</p>
-              <p className="text-xl sm:text-2xl font-semibold text-gray-900">
+              <p className="text-sm font-medium text-gray-500">Rejected</p>
+              <p className="text-2xl font-semibold text-gray-900">
                 {filteredLeaves.filter(l => l.status === 'Rejected').length}
               </p>
             </div>
@@ -368,10 +368,10 @@ export const Reports: React.FC = () => {
 
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
-        <nav className="flex space-x-4 sm:space-x-8 overflow-x-auto">
+        <nav className="flex space-x-8">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
+            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
               activeTab === 'overview'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -382,44 +382,44 @@ export const Reports: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('department')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
+            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
               activeTab === 'department'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
             <Building className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">By </span>Department
+            By Department
           </button>
           <button
             onClick={() => setActiveTab('employee')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
+            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
               activeTab === 'employee'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
             <User className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">By </span>Employee
+            By Employee
           </button>
           <button
             onClick={() => setActiveTab('leave-type')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
+            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
               activeTab === 'leave-type'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
             <Calendar className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">By </span>Leave Type
+            By Leave Type
           </button>
         </nav>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Filters</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Filters</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
             <div className="relative">
@@ -495,18 +495,18 @@ export const Reports: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+            <div className="flex space-x-2">
               <input
                 type="date"
                 value={filters.dateFrom}
                 onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
-                className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-xs sm:text-sm"
+                className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-xs"
               />
               <input
                 type="date"
                 value={filters.dateTo}
                 onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
-                className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-xs sm:text-sm"
+                className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-xs"
               />
             </div>
           </div>
@@ -515,9 +515,9 @@ export const Reports: React.FC = () => {
 
       {/* Charts Section */}
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <PieChart className="h-5 w-5 mr-2" />
               Leave Types Distribution
             </h3>
@@ -526,7 +526,7 @@ export const Reports: React.FC = () => {
                 <div key={type} className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">{type}</span>
                   <div className="flex items-center space-x-2">
-                    <div className="w-16 sm:w-20 bg-gray-200 rounded-full h-2">
+                    <div className="w-20 bg-gray-200 rounded-full h-2">
                       <div 
                         className="bg-blue-600 h-2 rounded-full" 
                         style={{ width: `${(count / filteredLeaves.length) * 100}%` }}
@@ -539,8 +539,8 @@ export const Reports: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <BarChart3 className="h-5 w-5 mr-2" />
               Status Distribution
             </h3>
@@ -549,7 +549,7 @@ export const Reports: React.FC = () => {
                 <div key={status} className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">{status}</span>
                   <div className="flex items-center space-x-2">
-                    <div className="w-16 sm:w-20 bg-gray-200 rounded-full h-2">
+                    <div className="w-20 bg-gray-200 rounded-full h-2">
                       <div 
                         className={`h-2 rounded-full ${
                           status === 'Approved' ? 'bg-green-600' :
@@ -570,17 +570,17 @@ export const Reports: React.FC = () => {
 
       {/* Department Analysis */}
       {activeTab === 'department' && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Department Analysis</h3>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Department Analysis</h3>
           <div className="space-y-4">
             {Object.entries(chartData.departments).map(([dept, count]) => (
-              <div key={dept} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg space-y-2 sm:space-y-0">
+              <div key={dept} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
                   <h4 className="font-medium text-gray-900">{dept}</h4>
                   <p className="text-sm text-gray-500">{count} leave requests</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-base sm:text-lg font-semibold text-gray-900">{count}</p>
+                  <p className="text-lg font-semibold text-gray-900">{count}</p>
                   <p className="text-xs text-gray-500">
                     {((count / filteredLeaves.length) * 100).toFixed(1)}%
                   </p>
@@ -593,58 +593,58 @@ export const Reports: React.FC = () => {
 
       {/* Data Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-4 sm:p-6 border-b border-gray-200">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900">Leave Records</h3>
+        <div className="p-6 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Leave Records</h3>
           <p className="text-sm text-gray-500 mt-1">
             Showing {startIndex + 1}-{Math.min(endIndex, filteredLeaves.length)} of {filteredLeaves.length} records
           </p>
         </div>
 
-        <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
                 <th 
-                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                   onClick={() => handleSort('employees' as keyof LeaveRecord)}
                 >
                   Employee
                 </th>
                 <th 
-                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                   onClick={() => handleSort('type')}
                 >
                   Type
                 </th>
                 <th 
-                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden sm:table-cell"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                   onClick={() => handleSort('start_date')}
                 >
                   Start Date
                 </th>
                 <th 
-                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden sm:table-cell"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                   onClick={() => handleSort('end_date')}
                 >
                   End Date
                 </th>
                 <th 
-                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                   onClick={() => handleSort('days_requested')}
                 >
                   Days
                 </th>
                 <th 
-                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                   onClick={() => handleSort('status')}
                 >
                   Status
                 </th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Reason
                 </th>
                 <th 
-                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden md:table-cell"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                   onClick={() => handleSort('created_at')}
                 >
                   Created
@@ -654,37 +654,37 @@ export const Reports: React.FC = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {currentLeaves.map((leave) => (
                 <tr key={leave.id} className="hover:bg-gray-50">
-                  <td className="px-3 sm:px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">
                         {leave.employees?.name || 'Unknown'}
                       </div>
-                      <div className="text-sm text-gray-500 hidden sm:block">
+                      <div className="text-sm text-gray-500">
                         {leave.employees?.department || 'Unknown'}
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 sm:px-6 py-4 text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {leave.type}
                   </td>
-                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden sm:table-cell">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {new Date(leave.start_date).toLocaleDateString()}
                   </td>
-                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden sm:table-cell">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {new Date(leave.end_date).toLocaleDateString()}
                   </td>
-                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {leave.days_requested}
                   </td>
-                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(leave.status)}`}>
                       {leave.status}
                     </span>
                   </td>
-                  <td className="px-3 sm:px-6 py-4 text-sm text-gray-900 max-w-xs truncate hidden lg:table-cell">
+                  <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
                     {leave.reason || '-'}
                   </td>
-                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {new Date(leave.created_at).toLocaleDateString()}
                   </td>
                 </tr>
@@ -695,7 +695,7 @@ export const Reports: React.FC = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-3 sm:px-6 py-3 border-t border-gray-200 flex items-center justify-between">
+          <div className="px-6 py-3 border-t border-gray-200 flex items-center justify-between">
             <div className="flex items-center text-sm text-gray-500">
               Page {currentPage} of {totalPages}
             </div>

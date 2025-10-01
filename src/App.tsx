@@ -74,13 +74,13 @@ const AppContent: React.FC = () => {
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
       
-      <div className="flex-1 md:pl-64">
+      <div className="flex-1 lg:pl-64">
         <Header
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
           title={getTabTitle(activeTab)}
         />
         
-        <main className="flex-1 min-h-0">
+        <main className="flex-1">
           {renderContent()}
         </main>
       </div>
