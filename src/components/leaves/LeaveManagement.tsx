@@ -694,21 +694,19 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
                   <div className="flex items-center space-x-4">
                     <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Workflow:</span>
                     <div className="flex items-center space-x-2">
-                      {getWorkflowSteps(leave).map((step, index) => (
+                      {getWorkflowSteps(leave).filter(step => step.status !== 'skipped').map((step, index) => (
                         <React.Fragment key={index}>
                           <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs ${
                             step.status === 'approved' ? 'bg-green-100 text-green-800' :
                             step.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                            step.status === 'skipped' ? 'bg-gray-100 text-gray-800' :
                             'bg-yellow-100 text-yellow-800'
                           }`}>
                             <span>{step.name.length > 15 ? step.name.substring(0, 15) + '...' : step.name}</span>
                             {step.status === 'approved' && <CheckCircle className="h-3 w-3" />}
                             {step.status === 'rejected' && <XCircle className="h-3 w-3" />}
-                            {step.status === 'skipped' && <X className="h-3 w-3" />}
                             {step.status === 'pending' && <Clock className="h-3 w-3" />}
                           </div>
-                          {index < getWorkflowSteps(leave).length - 1 && (
+                          {index < getWorkflowSteps(leave).filter(step => step.status !== 'skipped').length - 1 && (
                             <div className="w-4 h-px bg-gray-300"></div>
                           )}
                         </React.Fragment>
@@ -812,7 +810,7 @@ const WorkflowHistoryModal: React.FC<{
           <div className="mb-6">
             <h4 className="text-sm font-medium text-gray-900 mb-3">Approval Workflow</h4>
             <div className="flex items-center space-x-2">
-              {workflowSteps.map((step, index) => (
+              {workflowSteps.filter(step => step.status !== 'skipped').map((step, index) => (
                 <React.Fragment key={index}>
                   <div className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg ${
                     step.status === 'approved' ? 'bg-green-50 border border-green-200' :
@@ -822,7 +820,6 @@ const WorkflowHistoryModal: React.FC<{
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                       step.status === 'approved' ? 'bg-green-100' :
                       step.status === 'rejected' ? 'bg-red-100' :
-                      step.status === 'skipped' ? 'bg-gray-50 border border-gray-200' :
                       'bg-yellow-100'
                     }`}>
                       {step.status === 'approved' && <CheckCircle className="h-4 w-4 text-green-600" />}
@@ -839,7 +836,7 @@ const WorkflowHistoryModal: React.FC<{
                       )}
                     </div>
                   </div>
-                  {index < workflowSteps.length - 1 && (
+                  {index < workflowSteps.filter(step => step.status !== 'skipped').length - 1 && (
                     <div className="w-8 h-px bg-gray-300"></div>
                   )}
                 </React.Fragment>
