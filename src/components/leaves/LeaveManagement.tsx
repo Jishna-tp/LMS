@@ -143,7 +143,10 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
     
     if (!employee) return steps
 
-    // Determine workflow based on employee role
+    // Determine workflow based on employee role and actual workflow history
+    const workflowHistory = leave.workflow_history || []
+    const isRejected = leave.status === 'Rejected'
+    
     if (employee.role === 'HR') {
       // HR requests are auto-approved
       steps.push({
@@ -154,47 +157,49 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
       })
     } else if (employee.role === 'Admin' || employee.role === 'Manager') {
       // Admin/Manager requests go directly to HR
+      const hrApproval = workflowHistory.find(h => h.actor.role === 'HR' && h.action_type !== 'submitted')
+      
       steps.push({
         role: 'HR',
-        name: 'HR Team',
-        status: leave.status === 'Approved' ? 'approved' : 
-               leave.status === 'Rejected' ? 'rejected' : 'pending'
+        name: hrApproval ? hrApproval.actor.name : 'HR Team',
+        status: hrApproval ? 
+          (hrApproval.action_type === 'approved' ? 'approved' : 'rejected') :
+          'pending',
+        timestamp: hrApproval?.created_at,
+        notes: hrApproval?.notes || undefined
       })
     } else {
       // Employee requests: Manager → HR
       if (employee.manager_id) {
+        const managerApproval = workflowHistory.find(h => h.actor.role === 'Manager' && h.action_type !== 'submitted')
+        
         steps.push({
           role: 'Manager',
-          name: 'Line Manager',
-          status: leave.approved_by_manager ? 'approved' :
-                 leave.status === 'Rejected' ? 'rejected' : 'pending'
+          name: managerApproval ? managerApproval.actor.name : 'Line Manager',
+          status: managerApproval ? 
+            (managerApproval.action_type === 'approved' ? 'approved' : 'rejected') :
+            'pending',
+          timestamp: managerApproval?.created_at,
+          notes: managerApproval?.notes || undefined
+        })
+        
+        // HR step - only if manager approved or if rejected by manager (show as skipped)
+        const hrApproval = workflowHistory.find(h => h.actor.role === 'HR' && h.action_type !== 'submitted')
+        const managerRejected = managerApproval?.action_type === 'rejected'
+        
+        steps.push({
+          role: 'HR',
+          name: hrApproval ? hrApproval.actor.name : 'HR Team',
+          status: managerRejected ? 'skipped' :
+            hrApproval ? 
+              (hrApproval.action_type === 'approved' ? 'approved' : 'rejected') :
+              (managerApproval?.action_type === 'approved' ? 'pending' : 'pending'),
+          timestamp: hrApproval?.created_at,
+          notes: hrApproval?.notes || undefined
         })
       }
-      
-      steps.push({
-        role: 'HR',
-        name: 'HR Team',
-        status: leave.approved_by_hr ? 'approved' :
-               leave.status === 'Rejected' ? 'rejected' :
-               leave.approved_by_manager ? 'pending' : 'pending'
-      })
     }
 
-    // Add timestamps and notes from workflow history
-    if (leave.workflow_history) {
-      leave.workflow_history.forEach(history => {
-        const stepIndex = steps.findIndex(step => 
-          (step.role === 'Manager' && history.actor.role === 'Manager') ||
-          (step.role === 'HR' && history.actor.role === 'HR')
-        )
-        
-        if (stepIndex !== -1 && history.action_type !== 'submitted') {
-          steps[stepIndex].timestamp = history.created_at
-          steps[stepIndex].notes = history.notes || undefined
-          steps[stepIndex].name = history.actor.name
-        }
-      })
-    }
 
     return steps
   }
@@ -694,11 +699,13 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
                           <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs ${
                             step.status === 'approved' ? 'bg-green-100 text-green-800' :
                             step.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                            step.status === 'skipped' ? 'bg-gray-100 text-gray-800' :
                             'bg-yellow-100 text-yellow-800'
                           }`}>
-                            <span>{step.name}</span>
+                            <span>{step.name.length > 15 ? step.name.substring(0, 15) + '...' : step.name}</span>
                             {step.status === 'approved' && <CheckCircle className="h-3 w-3" />}
                             {step.status === 'rejected' && <XCircle className="h-3 w-3" />}
+                            {step.status === 'skipped' && <X className="h-3 w-3" />}
                             {step.status === 'pending' && <Clock className="h-3 w-3" />}
                           </div>
                           {index < getWorkflowSteps(leave).length - 1 && (
@@ -815,6 +822,7 @@ const WorkflowHistoryModal: React.FC<{
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                       step.status === 'approved' ? 'bg-green-100' :
                       step.status === 'rejected' ? 'bg-red-100' :
+                      step.status === 'skipped' ? 'bg-gray-50 border border-gray-200' :
                       'bg-yellow-100'
                     }`}>
                       {step.status === 'approved' && <CheckCircle className="h-4 w-4 text-green-600" />}
@@ -850,15 +858,24 @@ const WorkflowHistoryModal: React.FC<{
               <div className="space-y-4">
                 {workflowHistory.map((history, index) => (
                   <div key={history.id} className="flex items-start space-x-4">
+                        {step.status === 'skipped' && <X className="h-4 w-4 text-gray-600" />}
                     <div className="flex-shrink-0">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                         history.action_type === 'submitted' ? 'bg-blue-100' :
                         history.action_type === 'approved' ? 'bg-green-100' :
+                        <p className="text-xs text-gray-500 capitalize">
+                          {step.status === 'skipped' ? 'Skipped' : step.status}
+                        </p>
                         'bg-red-100'
                       }`}>
                         {history.action_type === 'submitted' && <FileText className="h-4 w-4 text-blue-600" />}
                         {history.action_type === 'approved' && <CheckCircle className="h-4 w-4 text-green-600" />}
                         {history.action_type === 'rejected' && <XCircle className="h-4 w-4 text-red-600" />}
+                        {step.notes && step.status === 'rejected' && (
+                          <p className="text-xs text-red-600 italic mt-1" title={step.notes}>
+                            Reason provided
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex-1">
