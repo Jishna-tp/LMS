@@ -16,6 +16,13 @@ const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // Reset to dashboard when user changes (sign in/out)
+  React.useEffect(() => {
+    if (user) {
+      setActiveTab('dashboard')
+    }
+  }, [user])
+
   // Handle navigation after form submission
   const handleLeaveSubmitted = () => {
     setActiveTab('leaves')
