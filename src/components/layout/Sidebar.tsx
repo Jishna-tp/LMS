@@ -65,12 +65,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
 
       {/* Sidebar */}
       <div className={`
-        fixed top-0 left-0 h-full bg-white shadow-xl z-50 transition-transform duration-300 ease-in-out
+        fixed top-0 left-0 h-screen bg-white shadow-xl z-50 transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:static lg:z-auto lg:w-64
+        lg:translate-x-0 lg:static lg:z-auto lg:w-64 lg:h-screen
         w-80 sm:w-64 flex flex-col
       `}>
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 lg:p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h1 className="text-lg sm:text-xl font-bold text-gray-900">EMS</h1>
             <button
@@ -89,7 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
           )}
         </div>
 
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 lg:p-4 space-y-2">
           {filteredMenuItems.map((item) => {
             const Icon = item.icon
             const showNotificationBadge = item.id === 'leaves' && unreadCount > 0
@@ -122,7 +122,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
           })}
         </nav>
 
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 lg:p-4 border-t border-gray-200">
           <button
             onClick={logout}
             className="w-full flex items-center px-3 sm:px-4 py-3 text-left rounded-lg text-red-600 hover:bg-red-50 transition-colors"
