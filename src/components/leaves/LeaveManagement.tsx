@@ -111,9 +111,8 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           // HR sees requests that need HR approval:
           // 1. Requests approved by manager but not yet by HR
           // 2. Direct requests from Admin/Manager roles
-          query = query
-            .eq('status', 'Approved')
-            .is('approved_by_hr', null)
+          // 3. Requests already approved by this HR user
+          query = query.or(`and(status.eq.Approved,approved_by_hr.is.null),approved_by_hr.eq.${user.employee.id}`)
         } else {
           // Other roles don't have approve tab
           query = query.eq('employee_id', 'no-approval-access')
