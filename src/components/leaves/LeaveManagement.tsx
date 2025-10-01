@@ -143,7 +143,10 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
     
     if (!employee) return steps
 
-    // Determine workflow based on employee role
+    // Determine workflow based on employee role and actual workflow history
+    const workflowHistory = leave.workflow_history || []
+    const isRejected = leave.status === 'Rejected'
+    
     if (employee.role === 'HR') {
       // HR requests are auto-approved
       steps.push({
@@ -154,47 +157,49 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
       })
     } else if (employee.role === 'Admin' || employee.role === 'Manager') {
       // Admin/Manager requests go directly to HR
+      const hrApproval = workflowHistory.find(h => h.actor.role === 'HR' && h.action_type !== 'submitted')
+      
       steps.push({
         role: 'HR',
-        name: 'HR Team',
-        status: leave.status === 'Approved' ? 'approved' : 
-               leave.status === 'Rejected' ? 'rejected' : 'pending'
+        name: hrApproval ? hrApproval.actor.name : 'HR Team',
+        status: hrApproval ? 
+          (hrApproval.action_type === 'approved' ? 'approved' : 'rejected') :
+          'pending',
+        timestamp: hrApproval?.created_at,
+        notes: hrApproval?.notes || undefined
       })
     } else {
       // Employee requests: Manager → HR
       if (employee.manager_id) {
+        const managerApproval = workflowHistory.find(h => h.actor.role === 'Manager' && h.action_type !== 'submitted')
+        
         steps.push({
           role: 'Manager',
-          name: 'Line Manager',
-          status: leave.approved_by_manager ? 'approved' :
-                 leave.status === 'Rejected' ? 'rejected' : 'pending'
+          name: managerApproval ? managerApproval.actor.name : 'Line Manager',
+          status: managerApproval ? 
+            (managerApproval.action_type === 'approved' ? 'approved' : 'rejected') :
+            'pending',
+          timestamp: managerApproval?.created_at,
+          notes: managerApproval?.notes || undefined
+        })
+        
+        // HR step - only if manager approved or if rejected by manager (show as skipped)
+        const hrApproval = workflowHistory.find(h => h.actor.role === 'HR' && h.action_type !== 'submitted')
+        const managerRejected = managerApproval?.action_type === 'rejected'
+        
+        steps.push({
+          role: 'HR',
+          name: hrApproval ? hrApproval.actor.name : 'HR Team',
+          status: managerRejected ? 'skipped' :
+            hrApproval ? 
+              (hrApproval.action_type === 'approved' ? 'approved' : 'rejected') :
+              (managerApproval?.action_type === 'approved' ? 'pending' : 'pending'),
+          timestamp: hrApproval?.created_at,
+          notes: hrApproval?.notes || undefined
         })
       }
-      
-      steps.push({
-        role: 'HR',
-        name: 'HR Team',
-        status: leave.approved_by_hr ? 'approved' :
-               leave.status === 'Rejected' ? 'rejected' :
-               leave.approved_by_manager ? 'pending' : 'pending'
-      })
     }
 
-    // Add timestamps and notes from workflow history
-    if (leave.workflow_history) {
-      leave.workflow_history.forEach(history => {
-        const stepIndex = steps.findIndex(step => 
-          (step.role === 'Manager' && history.actor.role === 'Manager') ||
-          (step.role === 'HR' && history.actor.role === 'HR')
-        )
-        
-        if (stepIndex !== -1 && history.action_type !== 'submitted') {
-          steps[stepIndex].timestamp = history.created_at
-          steps[stepIndex].notes = history.notes || undefined
-          steps[stepIndex].name = history.actor.name
-        }
-      })
-    }
 
     return steps
   }
@@ -689,19 +694,19 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
                   <div className="flex items-center space-x-4">
                     <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Workflow:</span>
                     <div className="flex items-center space-x-2">
-                      {getWorkflowSteps(leave).map((step, index) => (
+                      {getWorkflowSteps(leave).filter(step => step.status !== 'skipped').map((step, index) => (
                         <React.Fragment key={index}>
                           <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs ${
                             step.status === 'approved' ? 'bg-green-100 text-green-800' :
                             step.status === 'rejected' ? 'bg-red-100 text-red-800' :
                             'bg-yellow-100 text-yellow-800'
                           }`}>
-                            <span>{step.name}</span>
+                            <span>{step.name.length > 15 ? step.name.substring(0, 15) + '...' : step.name}</span>
                             {step.status === 'approved' && <CheckCircle className="h-3 w-3" />}
                             {step.status === 'rejected' && <XCircle className="h-3 w-3" />}
                             {step.status === 'pending' && <Clock className="h-3 w-3" />}
                           </div>
-                          {index < getWorkflowSteps(leave).length - 1 && (
+                          {index < getWorkflowSteps(leave).filter(step => step.status !== 'skipped').length - 1 && (
                             <div className="w-4 h-px bg-gray-300"></div>
                           )}
                         </React.Fragment>
@@ -805,7 +810,7 @@ const WorkflowHistoryModal: React.FC<{
           <div className="mb-6">
             <h4 className="text-sm font-medium text-gray-900 mb-3">Approval Workflow</h4>
             <div className="flex items-center space-x-2">
-              {workflowSteps.map((step, index) => (
+              {workflowSteps.filter(step => step.status !== 'skipped').map((step, index) => (
                 <React.Fragment key={index}>
                   <div className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg ${
                     step.status === 'approved' ? 'bg-green-50 border border-green-200' :
@@ -831,7 +836,7 @@ const WorkflowHistoryModal: React.FC<{
                       )}
                     </div>
                   </div>
-                  {index < workflowSteps.length - 1 && (
+                  {index < workflowSteps.filter(step => step.status !== 'skipped').length - 1 && (
                     <div className="w-8 h-px bg-gray-300"></div>
                   )}
                 </React.Fragment>

@@ -8,6 +8,7 @@ import { Dashboard } from './components/dashboard/Dashboard'
 import { Profile } from './components/profile/Profile'
 import { LeaveManagement } from './components/leaves/LeaveManagement'
 import { EmployeeManagement } from './components/employees/EmployeeManagement'
+import { Reports } from './components/reports/Reports'
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth()
@@ -42,6 +43,7 @@ const AppContent: React.FC = () => {
       case 'profile': return 'Profile'
       case 'leaves': return 'Leave Management'
       case 'employees': return 'Employee Management'
+      case 'reports': return 'Reports'
       default: return 'Dashboard'
     }
   }
@@ -56,6 +58,8 @@ const AppContent: React.FC = () => {
         return <LeaveManagement onLeaveSubmitted={handleLeaveSubmitted} />
       case 'employees':
         return <EmployeeManagement />
+      case 'reports':
+        return <Reports />
       default:
         return <Dashboard />
     }
