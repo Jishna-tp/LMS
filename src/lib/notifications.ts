@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase, isSupabaseConfigured } from './supabase'
 
 export interface Notification {
   id: string
@@ -91,9 +91,7 @@ export const markAllNotificationsAsRead = async (userId: string) => {
 // Get unread notification count
 export const getUnreadNotificationCount = async (userId: string) => {
   try {
-    // Check if Supabase is properly configured
-    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-      console.warn('Supabase environment variables not configured')
+    if (!isSupabaseConfigured()) {
       return { success: false, count: 0 }
     }
 
@@ -106,7 +104,7 @@ export const getUnreadNotificationCount = async (userId: string) => {
     if (error) throw error
     return { success: true, count: count || 0 }
   } catch (error: any) {
-    console.warn('Error getting unread notification count:', error.message || error)
+    // Silently handle connection errors to prevent breaking the UI
     return { success: false, count: 0 }
   }
 }
