@@ -37,10 +37,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
     if (!user || !isSupabaseConfigured()) return
     
     try {
+    try {
       const result = await getUnreadNotificationCount(user.employee.id)
       if (result.success) {
         setUnreadCount(result.count)
       }
+    } catch (error) {
+      console.error('Error fetching unread count:', error)
+      setUnreadCount(0)
+    }
     } catch (error) {
       // Silently handle the error - notifications are not critical for sidebar functionality
       console.warn('Failed to fetch notification count:', error)
