@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Bell, Check, CheckCheck, Clock, Calendar, X } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { supabase } from '../../lib/supabase'
 import { 
   getUserNotifications, 
   markNotificationAsRead, 
@@ -22,6 +21,9 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ onClose, o
   useEffect(() => {
     if (user) {
       fetchNotifications()
+      // Set up real-time subscription for new notifications
+      const interval = setInterval(fetchNotifications, 10000) // Poll every 10 seconds
+      return () => clearInterval(interval)
     }
   }, [user])
 
@@ -89,7 +91,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ onClose, o
   const unreadCount = notifications.filter(n => !n.is_read).length
 
   return (
-    <div className="bg-white rounded-lg shadow-xl border border-gray-200 w-80 max-h-96 overflow-hidden">
+    <div className="bg-white rounded-lg shadow-xl border border-gray-200 w-96 max-h-96 overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
         <div className="flex items-center space-x-2">

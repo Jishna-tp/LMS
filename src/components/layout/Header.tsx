@@ -1,7 +1,8 @@
 import React from 'react'
-import { Menu, Bell, X } from 'lucide-react'
+import { Menu, Bell } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { NotificationPanel } from './NotificationPanel'
+import { getUnreadNotificationCount } from '../../lib/notifications'
 
 interface HeaderProps {
   onMenuToggle: () => void
@@ -11,13 +12,31 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onMenuToggle, title }) => {
   const { user } = useAuth()
   const [showNotifications, setShowNotifications] = React.useState(false)
+  const [unreadCount, setUnreadCount] = React.useState(0)
+
+  React.useEffect(() => {
+    if (user) {
+      fetchUnreadCount()
+      // Poll for new notifications every 30 seconds
+      const interval = setInterval(fetchUnreadCount, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [user])
+
+  const fetchUnreadCount = async () => {
+    if (!user) return
+    
+    const result = await getUnreadNotificationCount(user.employee.id)
+    if (result.success) {
+      setUnreadCount(result.count)
+    }
+  }
 
   const handleLeaveClick = (leaveId: string) => {
-    // This would ideally navigate to the specific leave
-    // For now, we'll just close notifications and the parent can handle navigation
+    // Close notifications panel
     setShowNotifications(false)
-    // In a real app, you might use React Router to navigate to /leaves/${leaveId}
-    console.log('Navigate to leave:', leaveId)
+    // This could be enhanced to navigate directly to the specific leave
+    // For now, it will just close the panel and user can navigate to leaves tab
   }
 
   return (
@@ -34,11 +53,16 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle, title }) => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <button 
+          <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="p-2 rounded-md hover:bg-gray-100 relative"
+            className="p-2 rounded-md hover:bg-gray-100 relative transition-colors"
           >
             <Bell className="h-5 w-5 text-gray-600" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
           <div className="flex items-center space-x-3">
             <div className="text-right hidden sm:block">
@@ -63,7 +87,10 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle, title }) => {
           />
           <div className="absolute right-6 top-full mt-2 z-50">
             <NotificationPanel 
-              onClose={() => setShowNotifications(false)} 
+              onClose={() => {
+                setShowNotifications(false)
+                fetchUnreadCount() // Refresh count when closing
+              }}
               onLeaveClick={handleLeaveClick}
             />
           </div>

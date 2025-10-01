@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Calendar, Clock, CheckCircle, XCircle, FileText, Filter, Search, CreditCard as Edit, Trash2, AlertCircle, X } from 'lucide-react'
+import { Plus, Calendar, Clock, CheckCircle, XCircle, FileText, Filter, Search, CreditCard as Edit, Trash2, AlertCircle, X, User, Users } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { createNotification } from '../../lib/notifications'
@@ -20,7 +20,13 @@ interface LeaveRequest {
   manager_notes: string | null
   hr_notes: string | null
   created_at: string
-  employees?: { name: string; department: string }
+  employees?: { 
+    id: string
+    name: string
+    department: string
+    manager_id: string | null
+    role: string
+  }
   workflow_history?: Array<{
     id: string
     leave_request_id: string
@@ -32,8 +38,17 @@ interface LeaveRequest {
   }>
 }
 
+interface WorkflowStep {
+  role: string
+  name: string
+  status: 'pending' | 'approved' | 'rejected'
+  timestamp?: string
+  notes?: string
+}
+
 export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitted }) => {
   const { user } = useAuth()
+  const [activeTab, setActiveTab] = useState<'requests' | 'approve'>('requests')
   const [leaves, setLeaves] = useState<LeaveRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -52,7 +67,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
 
   useEffect(() => {
     fetchLeaves()
-  }, [user])
+  }, [user, activeTab])
 
   const fetchLeaves = async () => {
     try {
@@ -60,7 +75,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         .from('leave_requests')
         .select(`
           *,
-          employees:employee_id (name, department),
+          employees:employee_id (id, name, department, manager_id, role),
           workflow_history:leave_workflow_history (
             id,
             action_by,
@@ -72,25 +87,33 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         `)
         .order('created_at', { ascending: false })
 
-      // Role-based filtering
-      if (user?.employee.role === 'Employee') {
-        query = query.eq('employee_id', user.employee.employee_id)
-      } else if (user?.employee.role === 'Manager') {
-        // Manager sees their team's pending leaves and approved leaves they approved
-        const { data: teamMembers } = await supabase
-          .from('employees')
-          .select('employee_id')
-          .eq('manager_id', user.employee.id)
-        
-        const teamEmployeeIds = teamMembers?.map(member => member.employee_id) || []
-        if (teamEmployeeIds.length > 0) {
-          query = query.in('employee_id', teamEmployeeIds)
+      if (activeTab === 'requests') {
+        // Show only user's own requests
+        query = query.eq('employee_id', user!.employee.employee_id)
+      } else if (activeTab === 'approve') {
+        // Show requests that need approval from current user
+        if (user?.employee.role === 'Manager') {
+          // Manager sees pending requests from their team members
+          const { data: teamMembers } = await supabase
+            .from('employees')
+            .select('employee_id')
+            .eq('manager_id', user.employee.id)
+          
+          const teamEmployeeIds = teamMembers?.map(member => member.employee_id) || []
+          if (teamEmployeeIds.length > 0) {
+            query = query
+              .in('employee_id', teamEmployeeIds)
+              .eq('status', 'Pending')
+          } else {
+            query = query.eq('employee_id', 'no-team-members')
+          }
+        } else if (user?.employee.role === 'HR') {
+          // HR sees all pending requests and manager-approved requests
+          query = query.in('status', ['Pending', 'Manager_Approved'])
         } else {
-          // Manager has no team members, show empty result
-          query = query.eq('employee_id', 'no-team-members')
+          // Other roles don't have approve tab
+          query = query.eq('employee_id', 'no-approval-access')
         }
-      } else if (user?.employee.role === 'HR') {
-        // HR sees all leaves
       }
 
       const { data, error } = await query
@@ -109,6 +132,70 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
     const end = new Date(endDate)
     const diffTime = Math.abs(end.getTime() - start.getTime())
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+  }
+
+  const getWorkflowSteps = (leave: LeaveRequest): WorkflowStep[] => {
+    const steps: WorkflowStep[] = []
+    const employee = leave.employees
+    
+    if (!employee) return steps
+
+    // Determine workflow based on employee role
+    if (employee.role === 'HR') {
+      // HR requests are auto-approved
+      steps.push({
+        role: 'HR',
+        name: 'Auto-approved',
+        status: 'approved',
+        timestamp: leave.created_at
+      })
+    } else if (employee.role === 'Admin' || employee.role === 'Manager') {
+      // Admin/Manager requests go directly to HR
+      steps.push({
+        role: 'HR',
+        name: 'HR Team',
+        status: leave.status === 'Approved' ? 'approved' : 
+               leave.status === 'Rejected' ? 'rejected' : 'pending'
+      })
+    } else {
+      // Employee requests: Manager → HR
+      if (employee.manager_id) {
+        steps.push({
+          role: 'Manager',
+          name: 'Line Manager',
+          status: leave.status === 'Pending' ? 'pending' :
+                 leave.status === 'Manager_Approved' ? 'approved' :
+                 leave.status === 'Approved' ? 'approved' :
+                 leave.status === 'Rejected' ? 'rejected' : 'pending'
+        })
+      }
+      
+      steps.push({
+        role: 'HR',
+        name: 'HR Team',
+        status: leave.status === 'Approved' ? 'approved' :
+               leave.status === 'Rejected' ? 'rejected' :
+               leave.status === 'Manager_Approved' ? 'pending' : 'pending'
+      })
+    }
+
+    // Add timestamps and notes from workflow history
+    if (leave.workflow_history) {
+      leave.workflow_history.forEach(history => {
+        const stepIndex = steps.findIndex(step => 
+          (step.role === 'Manager' && history.actor.role === 'Manager') ||
+          (step.role === 'HR' && history.actor.role === 'HR')
+        )
+        
+        if (stepIndex !== -1 && history.action_type !== 'submitted') {
+          steps[stepIndex].timestamp = history.created_at
+          steps[stepIndex].notes = history.notes || undefined
+          steps[stepIndex].name = history.actor.name
+        }
+      })
+    }
+
+    return steps
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -136,6 +223,13 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         setMessage({ type: 'success', text: 'Leave request updated successfully' })
       } else {
         // Create new leave
+        let initialStatus = 'Pending'
+        
+        // HR requests are auto-approved
+        if (user?.employee.role === 'HR') {
+          initialStatus = 'Approved'
+        }
+
         const { data: newLeave, error } = await supabase
           .from('leave_requests')
           .insert([{
@@ -145,7 +239,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
             end_date: formData.end_date,
             days_requested: days,
             reason: formData.reason,
-            status: 'Pending'
+            status: initialStatus
           }])
           .select()
           .single()
@@ -158,19 +252,15 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           .insert([{
             leave_request_id: newLeave.id,
             action_by: user!.employee.id,
-            action_type: 'submitted',
+            action_type: initialStatus === 'Approved' ? 'approved' : 'submitted',
             notes: formData.reason || null
           }])
         
         setMessage({ type: 'success', text: 'Leave request submitted successfully' })
 
-        // Call the callback to navigate to leaves tab
-        if (onLeaveSubmitted) {
-          onLeaveSubmitted()
-        }
-
-        // Notify manager about new leave request
-        if (user?.employee.manager_id && user?.employee.role === 'Employee') {
+        // Send notifications based on user role
+        if (user?.employee.role === 'Employee' && user?.employee.manager_id) {
+          // Notify line manager
           await createNotification(
             user.employee.manager_id,
             'New Leave Request',
@@ -178,8 +268,32 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
             'leave_submitted',
             newLeave.id
           )
+        } else if (user?.employee.role === 'Manager' || user?.employee.role === 'Admin') {
+          // Notify HR directly
+          const { data: hrUsers } = await supabase
+            .from('employees')
+            .select('id')
+            .eq('role', 'HR')
+          
+          if (hrUsers) {
+            for (const hrUser of hrUsers) {
+              await createNotification(
+                hrUser.id,
+                'New Leave Request',
+                `${user.employee.name} (${user.employee.role}) has submitted a ${formData.type} leave request for ${days} days.`,
+                'leave_submitted',
+                newLeave.id
+              )
+            }
+          }
+        }
+
+        // Call the callback to navigate to leaves tab
+        if (onLeaveSubmitted) {
+          onLeaveSubmitted()
         }
       }
+      
       setShowForm(false)
       setEditingLeave(null)
       setFormData({ type: 'Annual', start_date: '', end_date: '', reason: '' })
@@ -227,29 +341,44 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
 
   const handleApproveReject = async (leave: LeaveRequest, action: 'approve' | 'reject', notes: string = '') => {
     try {
-      let updateData: any = {
-        status: action === 'approve' ? 'Approved' : 'Rejected'
-      }
+      let newStatus = ''
       let notificationTitle = ''
       let notificationMessage = ''
-      let notificationType: 'leave_approved' | 'leave_rejected' = action === 'approve' ? 'leave_approved' : 'leave_rejected'
+      let notificationType: 'leave_approved' | 'leave_rejected' | 'leave_manager_approved' = 'leave_approved'
 
-      if (action === 'approve') {
-        notificationTitle = 'Leave Request Approved'
-        notificationMessage = `Your ${leave.type} leave request has been approved.`
-        if (user?.employee.role === 'Manager') {
-          updateData.manager_notes = notes
-        } else if (user?.employee.role === 'HR') {
-          updateData.hr_notes = notes
+      // Determine new status based on current user role and leave status
+      if (user?.employee.role === 'Manager') {
+        if (action === 'approve') {
+          newStatus = 'Manager_Approved'
+          notificationTitle = 'Leave Request - Manager Approved'
+          notificationMessage = `Your ${leave.type} leave request has been approved by your manager and is now pending HR approval.`
+          notificationType = 'leave_manager_approved'
+        } else {
+          newStatus = 'Rejected'
+          notificationTitle = 'Leave Request Rejected'
+          notificationMessage = `Your ${leave.type} leave request has been rejected by your manager. ${notes ? `Reason: ${notes}` : ''}`
+          notificationType = 'leave_rejected'
         }
-      } else {
-        notificationTitle = 'Leave Request Rejected'
-        notificationMessage = `Your ${leave.type} leave request has been rejected. ${notes ? `Reason: ${notes}` : ''}`
-        if (user?.employee.role === 'Manager') {
-          updateData.manager_notes = notes
-        } else if (user?.employee.role === 'HR') {
-          updateData.hr_notes = notes
+      } else if (user?.employee.role === 'HR') {
+        if (action === 'approve') {
+          newStatus = 'Approved'
+          notificationTitle = 'Leave Request Approved'
+          notificationMessage = `Your ${leave.type} leave request has been fully approved.`
+          notificationType = 'leave_approved'
+        } else {
+          newStatus = 'Rejected'
+          notificationTitle = 'Leave Request Rejected'
+          notificationMessage = `Your ${leave.type} leave request has been rejected by HR. ${notes ? `Reason: ${notes}` : ''}`
+          notificationType = 'leave_rejected'
         }
+      }
+
+      // Update leave request
+      let updateData: any = { status: newStatus }
+      if (user?.employee.role === 'Manager') {
+        updateData.manager_notes = notes
+      } else if (user?.employee.role === 'HR') {
+        updateData.hr_notes = notes
       }
 
       const { error } = await supabase
@@ -269,21 +398,36 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           notes: notes || null
         }])
 
-      // Get employee info to send notification
-      const { data: employee } = await supabase
-        .from('employees')
-        .select('id')
-        .eq('employee_id', leave.employee_id)
-        .single()
-
-      if (employee) {
+      // Send notifications
+      if (leave.employees) {
+        // Notify the employee who submitted the request
         await createNotification(
-          employee.id,
+          leave.employees.id,
           notificationTitle,
           notificationMessage,
           notificationType,
           leave.id
         )
+
+        // If manager approved, also notify HR
+        if (user?.employee.role === 'Manager' && action === 'approve') {
+          const { data: hrUsers } = await supabase
+            .from('employees')
+            .select('id')
+            .eq('role', 'HR')
+          
+          if (hrUsers) {
+            for (const hrUser of hrUsers) {
+              await createNotification(
+                hrUser.id,
+                'Leave Request - Manager Approved',
+                `${leave.employees.name}'s ${leave.type} leave request has been approved by their manager and requires HR approval.`,
+                'leave_manager_approved',
+                leave.id
+              )
+            }
+          }
+        }
       }
 
       setMessage({ type: 'success', text: `Leave request ${action}d successfully` })
@@ -297,7 +441,6 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
     switch (status) {
       case 'Pending': return 'text-yellow-600 bg-yellow-50 border-yellow-200'
       case 'Manager_Approved': return 'text-blue-600 bg-blue-50 border-blue-200'
-      case 'HR_Approved': return 'text-green-600 bg-green-50 border-green-200'
       case 'Approved': return 'text-green-600 bg-green-50 border-green-200'
       case 'Rejected': return 'text-red-600 bg-red-50 border-red-200'
       default: return 'text-gray-600 bg-gray-50 border-gray-200'
@@ -307,7 +450,6 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
   const formatStatus = (status: string) => {
     switch (status) {
       case 'Manager_Approved': return 'Manager Approved'
-      case 'HR_Approved': return 'HR Approved'
       default: return status
     }
   }
@@ -316,11 +458,12 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
     if (user?.employee.role === 'Manager' && leave.status === 'Pending') {
       return true
     }
-    if (user?.employee.role === 'HR' && leave.status === 'Pending') {
+    if (user?.employee.role === 'HR' && (leave.status === 'Pending' || leave.status === 'Manager_Approved')) {
       return true
     }
     return false
   }
+
   const filteredLeaves = leaves.filter(leave => {
     const matchesFilter = filter === 'all' || leave.status === filter
     const matchesSearch = searchTerm === '' || 
@@ -328,6 +471,8 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
       leave.type.toLowerCase().includes(searchTerm.toLowerCase())
     return matchesFilter && matchesSearch
   })
+
+  const showApproveTab = user?.employee.role === 'Manager' || user?.employee.role === 'HR'
 
   if (loading && leaves.length === 0) {
     return (
@@ -377,6 +522,36 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         </button>
       </div>
 
+      {/* Tabs */}
+      <div className="border-b border-gray-200 mb-6">
+        <nav className="flex space-x-8">
+          <button
+            onClick={() => setActiveTab('requests')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              activeTab === 'requests'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <User className="h-4 w-4 mr-2" />
+            My Requests
+          </button>
+          {showApproveTab && (
+            <button
+              onClick={() => setActiveTab('approve')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+                activeTab === 'approve'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Approve Requests
+            </button>
+          )}
+        </nav>
+      </div>
+
       {/* Filters */}
       <div className="mb-6 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
         <div className="relative">
@@ -400,7 +575,6 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
             <option value="all">All Status</option>
             <option value="Pending">Pending</option>
             <option value="Manager_Approved">Manager Approved</option>
-            <option value="HR_Approved">HR Approved</option>
             <option value="Approved">Approved</option>
             <option value="Rejected">Rejected</option>
           </select>
@@ -427,7 +601,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">
                           {leave.type} Leave
-                          {user?.employee.role !== 'Employee' && leave.employees && (
+                          {activeTab === 'approve' && leave.employees && (
                             <span className="text-sm font-normal text-gray-500 ml-2">
                               by {leave.employees.name}
                             </span>
@@ -443,7 +617,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
                             }}
                             className="text-blue-600 hover:text-blue-800 text-xs underline"
                           >
-                            View History
+                            View Workflow
                           </button>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(leave.status)}`}>
                             {formatStatus(leave.status)}
@@ -463,8 +637,8 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    {/* Employee actions */}
-                    {user?.employee.employee_id === leave.employee_id && leave.status === 'Pending' && (
+                    {/* Employee actions (only on requests tab) */}
+                    {activeTab === 'requests' && leave.status === 'Pending' && (
                       <>
                         <button
                           onClick={() => handleEdit(leave)}
@@ -483,8 +657,8 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
                       </>
                     )}
                     
-                    {/* Manager/HR actions */}
-                    {canApprove(leave) && (
+                    {/* Manager/HR actions (only on approve tab) */}
+                    {activeTab === 'approve' && canApprove(leave) && (
                       <>
                         <button
                           onClick={() => handleApproveReject(leave, 'approve')}
@@ -504,6 +678,32 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
                     )}
                   </div>
                 </div>
+
+                {/* Workflow Steps */}
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="flex items-center space-x-4">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Workflow:</span>
+                    <div className="flex items-center space-x-2">
+                      {getWorkflowSteps(leave).map((step, index) => (
+                        <React.Fragment key={index}>
+                          <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs ${
+                            step.status === 'approved' ? 'bg-green-100 text-green-800' :
+                            step.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            <span>{step.name}</span>
+                            {step.status === 'approved' && <CheckCircle className="h-3 w-3" />}
+                            {step.status === 'rejected' && <XCircle className="h-3 w-3" />}
+                            {step.status === 'pending' && <Clock className="h-3 w-3" />}
+                          </div>
+                          {index < getWorkflowSteps(leave).length - 1 && (
+                            <div className="w-4 h-px bg-gray-300"></div>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -514,6 +714,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
       {showWorkflowHistory && selectedLeave && (
         <WorkflowHistoryModal 
           leave={selectedLeave}
+          workflowSteps={getWorkflowSteps(selectedLeave)}
           onClose={() => {
             setShowWorkflowHistory(false)
             setSelectedLeave(null)
@@ -544,8 +745,9 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
 // Separate component for Workflow History Modal
 const WorkflowHistoryModal: React.FC<{
   leave: LeaveRequest
+  workflowSteps: WorkflowStep[]
   onClose: () => void
-}> = ({ leave, onClose }) => {
+}> = ({ leave, workflowSteps, onClose }) => {
   const [workflowHistory, setWorkflowHistory] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -594,49 +796,88 @@ const WorkflowHistoryModal: React.FC<{
         </div>
         
         <div className="p-6">
-          {loading ? (
-            <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {workflowHistory.map((history, index) => (
-                <div key={history.id} className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">
+          {/* Workflow Steps Overview */}
+          <div className="mb-6">
+            <h4 className="text-sm font-medium text-gray-900 mb-3">Approval Workflow</h4>
+            <div className="flex items-center space-x-2">
+              {workflowSteps.map((step, index) => (
+                <React.Fragment key={index}>
+                  <div className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg ${
+                    step.status === 'approved' ? 'bg-green-50 border border-green-200' :
+                    step.status === 'rejected' ? 'bg-red-50 border border-red-200' :
+                    'bg-yellow-50 border border-yellow-200'
+                  }`}>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      history.action_type === 'submitted' ? 'bg-blue-100' :
-                      history.action_type === 'approved' ? 'bg-green-100' :
-                      'bg-red-100'
+                      step.status === 'approved' ? 'bg-green-100' :
+                      step.status === 'rejected' ? 'bg-red-100' :
+                      'bg-yellow-100'
                     }`}>
-                      {history.action_type === 'submitted' && <FileText className="h-4 w-4 text-blue-600" />}
-                      {history.action_type === 'approved' && <CheckCircle className="h-4 w-4 text-green-600" />}
-                      {history.action_type === 'rejected' && <XCircle className="h-4 w-4 text-red-600" />}
+                      {step.status === 'approved' && <CheckCircle className="h-4 w-4 text-green-600" />}
+                      {step.status === 'rejected' && <XCircle className="h-4 w-4 text-red-600" />}
+                      {step.status === 'pending' && <Clock className="h-4 w-4 text-yellow-600" />}
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs font-medium text-gray-900">{step.name}</p>
+                      <p className="text-xs text-gray-500 capitalize">{step.status}</p>
+                      {step.timestamp && (
+                        <p className="text-xs text-gray-400">
+                          {new Date(step.timestamp).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <p className="font-medium text-gray-900">{history.actor.name}</p>
-                      <span className="text-xs text-gray-500">({history.actor.role})</span>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      {history.action_type === 'submitted' && 'Submitted leave request'}
-                      {history.action_type === 'approved' && 'Approved'}
-                      {history.action_type === 'rejected' && 'Rejected'}
-                    </p>
-                    {history.notes && (
-                      <p className="text-sm text-gray-500 mt-1 italic">"{history.notes}"</p>
-                    )}
-                    <p className="text-xs text-gray-400 mt-1">
-                      {new Date(history.created_at).toLocaleDateString()} at {new Date(history.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                  {index < workflowHistory.length - 1 && (
-                    <div className="absolute left-4 mt-8 w-px h-6 bg-gray-200"></div>
+                  {index < workflowSteps.length - 1 && (
+                    <div className="w-8 h-px bg-gray-300"></div>
                   )}
-                </div>
+                </React.Fragment>
               ))}
             </div>
-          )}
+          </div>
+
+          {/* Detailed History */}
+          <div>
+            <h4 className="text-sm font-medium text-gray-900 mb-3">Detailed History</h4>
+            {loading ? (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {workflowHistory.map((history, index) => (
+                  <div key={history.id} className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        history.action_type === 'submitted' ? 'bg-blue-100' :
+                        history.action_type === 'approved' ? 'bg-green-100' :
+                        'bg-red-100'
+                      }`}>
+                        {history.action_type === 'submitted' && <FileText className="h-4 w-4 text-blue-600" />}
+                        {history.action_type === 'approved' && <CheckCircle className="h-4 w-4 text-green-600" />}
+                        {history.action_type === 'rejected' && <XCircle className="h-4 w-4 text-red-600" />}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <p className="font-medium text-gray-900">{history.actor.name}</p>
+                        <span className="text-xs text-gray-500">({history.actor.role})</span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {history.action_type === 'submitted' && 'Submitted leave request'}
+                        {history.action_type === 'approved' && 'Approved'}
+                        {history.action_type === 'rejected' && 'Rejected'}
+                      </p>
+                      {history.notes && (
+                        <p className="text-sm text-gray-500 mt-1 italic">"{history.notes}"</p>
+                      )}
+                      <p className="text-xs text-gray-400 mt-1">
+                        {new Date(history.created_at).toLocaleDateString()} at {new Date(history.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -70,14 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
       `}>
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-bold text-gray-900">EMS</h1>
-              {unreadCount > 0 && (
-                <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </div>
+            <h1 className="text-xl font-bold text-gray-900">EMS</h1>
             <button
               onClick={onToggle}
               className="lg:hidden p-1 rounded-md hover:bg-gray-100"
@@ -97,6 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
         <nav className="flex-1 p-4 space-y-2">
           {filteredMenuItems.map((item) => {
             const Icon = item.icon
+            const showNotificationBadge = item.id === 'leaves' && unreadCount > 0
             return (
               <button
                 key={item.id}
@@ -105,15 +99,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
                   if (window.innerWidth < 1024) onToggle()
                 }}
                 className={`
-                  w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors
+                  w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-colors
                   ${activeTab === item.id
                     ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-700'
                     : 'text-gray-700 hover:bg-gray-50'
                   }
                 `}
               >
-                <Icon className={`h-5 w-5 mr-3 ${activeTab === item.id ? 'text-blue-700' : 'text-gray-400'}`} />
-                {item.label}
+                <div className="flex items-center">
+                  <Icon className={`h-5 w-5 mr-3 ${activeTab === item.id ? 'text-blue-700' : 'text-gray-400'}`} />
+                  {item.label}
+                </div>
+                {showNotificationBadge && (
+                  <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </button>
             )
           })}
