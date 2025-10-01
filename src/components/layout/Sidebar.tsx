@@ -33,7 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
   }, [user])
 
   const fetchUnreadCount = async () => {
-    if (!user) return
+    if (!user || !isSupabaseConfigured()) return
     
     try {
       const result = await getUnreadNotificationCount(user.employee.id)

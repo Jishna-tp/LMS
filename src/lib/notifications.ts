@@ -40,6 +40,10 @@ export const createNotification = async (
 
 // Get user notifications
 export const getUserNotifications = async (userId: string) => {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured', data: [] }
+  }
+
   try {
     const { data, error } = await supabase
       .from('notifications')
@@ -90,11 +94,11 @@ export const markAllNotificationsAsRead = async (userId: string) => {
 
 // Get unread notification count
 export const getUnreadNotificationCount = async (userId: string) => {
-  try {
-    if (!isSupabaseConfigured()) {
-      return { success: false, count: 0 }
-    }
+  if (!isSupabaseConfigured()) {
+    return { success: false, count: 0 }
+  }
 
+  try {
     const { count, error } = await supabase
       .from('notifications')
       .select('*', { count: 'exact' })
