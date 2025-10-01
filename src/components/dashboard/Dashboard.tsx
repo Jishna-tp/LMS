@@ -8,7 +8,7 @@ import {
   AlertTriangle
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { supabase } from '../../lib/supabase'
+import { supabase, isSupabaseConfigured } from '../../lib/supabase'
 
 interface DashboardStats {
   totalEmployees: number
@@ -33,6 +33,11 @@ export const Dashboard: React.FC = () => {
   }, [user])
 
   const fetchDashboardData = async () => {
+    if (!isSupabaseConfigured()) {
+      setLoading(false)
+      return
+    }
+
     try {
       // Get total employees (Admin only)
       let totalEmployees = 0

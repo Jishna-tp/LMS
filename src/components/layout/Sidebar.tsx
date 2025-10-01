@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { getUnreadNotificationCount } from '../../lib/notifications'
+import { isSupabaseConfigured } from '../../lib/supabase'
 
 interface SidebarProps {
   activeTab: string
