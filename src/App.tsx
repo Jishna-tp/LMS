@@ -66,7 +66,7 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
       <Sidebar
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -74,13 +74,13 @@ const AppContent: React.FC = () => {
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
       
-      <div className="flex-1 lg:pl-64">
+      <div className="flex-1 lg:pl-64 flex flex-col h-full overflow-hidden">
         <Header
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
           title={getTabTitle(activeTab)}
         />
         
-        <main className="flex-1">
+        <main className="flex-1 overflow-auto">
           {renderContent()}
         </main>
       </div>
