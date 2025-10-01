@@ -67,12 +67,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
       <div className={`
         fixed top-0 left-0 h-full bg-white shadow-xl z-50 transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:static lg:z-auto
-        w-64 flex flex-col
+        lg:translate-x-0 lg:static lg:z-auto lg:w-64
+        w-80 sm:w-64 flex flex-col
       `}>
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-gray-900">EMS</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900">EMS</h1>
             <button
               onClick={onToggle}
               className="lg:hidden p-1 rounded-md hover:bg-gray-100"
@@ -82,9 +82,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
           </div>
           {user && (
             <div className="mt-4">
-              <p className="text-sm font-medium text-gray-900">{user.employee.name}</p>
-              <p className="text-xs text-gray-500">{user.employee.role}</p>
-              <p className="text-xs text-gray-500">{user.employee.employee_id}</p>
+              <p className="text-sm font-medium text-gray-900 truncate">{user.employee.name}</p>
+              <p className="text-xs text-gray-500 truncate">{user.employee.role}</p>
+              <p className="text-xs text-gray-500 truncate">{user.employee.employee_id}</p>
             </div>
           )}
         </div>
@@ -101,7 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
                   if (window.innerWidth < 1024) onToggle()
                 }}
                 className={`
-                  w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-colors
+                  w-full flex items-center justify-between px-3 sm:px-4 py-3 text-left rounded-lg transition-colors
                   ${activeTab === item.id
                     ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-700'
                     : 'text-gray-700 hover:bg-gray-50'
@@ -109,11 +109,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
                 `}
               >
                 <div className="flex items-center">
-                  <Icon className={`h-5 w-5 mr-3 ${activeTab === item.id ? 'text-blue-700' : 'text-gray-400'}`} />
-                  {item.label}
+                  <Icon className={`h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 ${activeTab === item.id ? 'text-blue-700' : 'text-gray-400'}`} />
+                  <span className="text-sm sm:text-base">{item.label}</span>
                 </div>
                 {showNotificationBadge && (
-                  <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                  <span className="bg-red-500 text-white text-xs rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 min-w-[18px] sm:min-w-[20px] text-center">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
@@ -125,10 +125,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
         <div className="p-4 border-t border-gray-200">
           <button
             onClick={logout}
-            className="w-full flex items-center px-4 py-3 text-left rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+            className="w-full flex items-center px-3 sm:px-4 py-3 text-left rounded-lg text-red-600 hover:bg-red-50 transition-colors"
           >
-            <LogOut className="h-5 w-5 mr-3" />
-            Sign Out
+            <LogOut className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
+            <span className="text-sm sm:text-base">Sign Out</span>
           </button>
         </div>
       </div>

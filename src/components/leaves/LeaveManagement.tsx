@@ -500,9 +500,9 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       {message.text && (
-        <div className={`mb-6 p-4 rounded-lg flex items-center ${
+        <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg flex items-start sm:items-center ${
           message.type === 'success' 
             ? 'bg-green-50 border border-green-200 text-green-800' 
             : 'bg-red-50 border border-red-200 text-red-800'
@@ -512,20 +512,20 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           ) : (
             <AlertCircle className="h-4 w-4 mr-2" />
           )}
-          {message.text}
+          <span className="text-sm sm:text-base">{message.text}</span>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Leave Management</h2>
-          <p className="text-gray-600">Manage your leave requests and approvals</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Leave Management</h2>
+          <p className="text-sm sm:text-base text-gray-600">Manage your leave requests and approvals</p>
         </div>
         
         <button
           onClick={() => setShowForm(true)}
-          className="mt-4 sm:mt-0 flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          className="mt-3 sm:mt-0 flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm sm:text-base"
         >
           <Plus className="h-4 w-4 mr-2" />
           New Leave Request
@@ -533,11 +533,11 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="flex space-x-8">
+      <div className="border-b border-gray-200 mb-4 sm:mb-6">
+        <nav className="flex space-x-4 sm:space-x-8 overflow-x-auto">
           <button
             onClick={() => setActiveTab('requests')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+            className={`py-3 sm:py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
               activeTab === 'requests'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -549,7 +549,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           {showApproveTab && (
             <button
               onClick={() => setActiveTab('approve')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              className={`py-3 sm:py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                 activeTab === 'approve'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -563,7 +563,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
       </div>
 
       {/* Filters */}
-      <div className="mb-6 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
@@ -571,7 +571,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search leaves..."
-            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            className="w-full sm:w-auto pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
           />
         </div>
         
@@ -580,7 +580,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none"
+            className="w-full sm:w-auto pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none text-sm sm:text-base"
           >
             <option value="all">All Status</option>
             <option value="Pending">Pending</option>
@@ -594,50 +594,56 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
       {/* Leave List */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         {filteredLeaves.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
+          <div className="p-6 sm:p-8 text-center text-gray-500">
             <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p>No leave requests found</p>
+            <p className="text-sm sm:text-base">No leave requests found</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
             {filteredLeaves.map((leave) => (
-              <div key={leave.id} className="p-6">
-                <div className="flex items-center justify-between">
+              <div key={leave.id} className="p-4 sm:p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-start sm:items-center space-x-3 sm:space-x-4">
                       <div className="p-2 bg-blue-100 rounded-full">
                         <Calendar className="h-5 w-5 text-blue-600" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                           {leave.type} Leave
                           {activeTab === 'approve' && leave.employees && (
-                            <span className="text-sm font-normal text-gray-500 ml-2">
+                            <span className="block sm:inline text-sm font-normal text-gray-500 sm:ml-2">
                               by {leave.employees.name}
                             </span>
                           )}
                         </h3>
-                        <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
-                          <span>{new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}</span>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-500 mt-1 space-y-1 sm:space-y-0">
+                          <span className="block sm:inline">
+                            <span className="sm:hidden">From: </span>
+                            {new Date(leave.start_date).toLocaleDateString()}
+                            <span className="hidden sm:inline"> - </span>
+                            <span className="sm:hidden block">To: </span>
+                            {new Date(leave.end_date).toLocaleDateString()}
+                          </span>
                           <span>{leave.days_requested} days</span>
                           <button
                             onClick={() => {
                               setSelectedLeave(leave)
                               setShowWorkflowHistory(true)
                             }}
-                            className="text-blue-600 hover:text-blue-800 text-xs underline"
+                            className="text-blue-600 hover:text-blue-800 text-xs underline self-start"
                           >
                             View Workflow
                           </button>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(leave.status)}`}>
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border self-start ${getStatusColor(leave.status)}`}>
                             {formatStatus(leave.status)}
                           </span>
                         </div>
                         {leave.reason && (
-                          <p className="text-sm text-gray-600 mt-2">{leave.reason}</p>
+                          <p className="text-sm text-gray-600 mt-2 line-clamp-2">{leave.reason}</p>
                         )}
                         {(leave.manager_notes || leave.hr_notes) && (
-                          <div className="mt-2 text-xs text-gray-500">
+                          <div className="mt-2 text-xs text-gray-500 space-y-1">
                             {leave.manager_notes && <p><span className="font-medium">Manager:</span> {leave.manager_notes}</p>}
                             {leave.hr_notes && <p><span className="font-medium">HR:</span> {leave.hr_notes}</p>}
                           </div>
@@ -646,7 +652,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 lg:ml-4">
                     {/* Employee actions (only on requests tab) */}
                     {activeTab === 'requests' && leave.status === 'Pending' && (
                       <>
@@ -672,17 +678,19 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
                       <>
                         <button
                           onClick={() => handleApproveReject(leave, 'approve')}
-                          className="flex items-center px-3 py-1 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-sm"
+                          className="flex items-center px-2 sm:px-3 py-1 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-xs sm:text-sm"
                         >
                           <CheckCircle className="h-4 w-4 mr-1" />
-                          Approve
+                          <span className="hidden sm:inline">Approve</span>
+                          <span className="sm:hidden">✓</span>
                         </button>
                         <button
                           onClick={() => handleApproveReject(leave, 'reject')}
-                          className="flex items-center px-3 py-1 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors text-sm"
+                          className="flex items-center px-2 sm:px-3 py-1 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors text-xs sm:text-sm"
                         >
                           <XCircle className="h-4 w-4 mr-1" />
-                          Reject
+                          <span className="hidden sm:inline">Reject</span>
+                          <span className="sm:hidden">✗</span>
                         </button>
                       </>
                     )}
@@ -690,24 +698,28 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
                 </div>
 
                 {/* Workflow Steps */}
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <div className="flex items-center space-x-4">
+                <div className="mt-4 pt-4 border-t border-gray-100 overflow-x-auto">
+                  <div className="flex items-center space-x-2 sm:space-x-4 min-w-max">
                     <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Workflow:</span>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1 sm:space-x-2">
                       {getWorkflowSteps(leave).filter(step => step.status !== 'skipped').map((step, index) => (
                         <React.Fragment key={index}>
-                          <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs ${
+                          <div className={`flex items-center space-x-1 px-1.5 sm:px-2 py-1 rounded-full text-xs whitespace-nowrap ${
                             step.status === 'approved' ? 'bg-green-100 text-green-800' :
                             step.status === 'rejected' ? 'bg-red-100 text-red-800' :
                             'bg-yellow-100 text-yellow-800'
                           }`}>
-                            <span>{step.name.length > 15 ? step.name.substring(0, 15) + '...' : step.name}</span>
+                            <span className="text-xs">
+                              {step.name.length > (window.innerWidth < 640 ? 8 : 15) ? 
+                                step.name.substring(0, window.innerWidth < 640 ? 8 : 15) + '...' : 
+                                step.name}
+                            </span>
                             {step.status === 'approved' && <CheckCircle className="h-3 w-3" />}
                             {step.status === 'rejected' && <XCircle className="h-3 w-3" />}
                             {step.status === 'pending' && <Clock className="h-3 w-3" />}
                           </div>
                           {index < getWorkflowSteps(leave).filter(step => step.status !== 'skipped').length - 1 && (
-                            <div className="w-4 h-px bg-gray-300"></div>
+                            <div className="w-2 sm:w-4 h-px bg-gray-300"></div>
                           )}
                         </React.Fragment>
                       ))}
