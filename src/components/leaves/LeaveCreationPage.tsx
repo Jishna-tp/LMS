@@ -404,31 +404,6 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
           </div>
         </div>
 
-        {/* Mobile Calendar - Show below form on mobile */}
-        <div className="xl:hidden mt-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Select Dates</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Click on dates to select your leave period. Holidays and existing leaves are shown for reference.
-            </p>
-            <IntegratedCalendar 
-              onDateSelect={handleDateSelect}
-              selectedDates={selectedDates}
-              compact={true}
-            />
-            
-            {/* Quick Tips */}
-            <div className="mt-4 bg-gray-50 rounded-lg p-3">
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Quick Tips</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Click a date to set start date, click another to set end date</li>
-                <li>• Red events are holidays, green/yellow are existing leaves</li>
-                <li>• Weekends and holidays don't count as working days</li>
-                <li>• Your selected dates are highlighted in blue</li>
-              </ul>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )
