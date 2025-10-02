@@ -227,7 +227,6 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
             Back to Leave Management
           </button>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create Leave Request</h1>
-          <p className="text-gray-600">Submit a new leave request with calendar integration</p>
         </div>
 
         {message.text && (
