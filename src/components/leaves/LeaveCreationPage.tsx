@@ -11,6 +11,13 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { IntegratedCalendar } from '../calendar/IntegratedCalendar'
 import { createNotification } from '../../lib/notifications'
+import { 
+  getLeavePolicies, 
+  validateLeaveRequest, 
+  getEmployeeLeaveBalances,
+  type LeavePolicy,
+  type EmployeeLeaveBalance 
+} from '../../lib/leavePolicy'
 
 interface LeaveCreationPageProps {
   onBack: () => void
@@ -27,28 +34,90 @@ interface Holiday {
 export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, onLeaveCreated }) => {
   const { user } = useAuth()
   const [formData, setFormData] = useState({
-    type: 'Annual',
+    type: 'ANNUAL',
     start_date: '',
     end_date: '',
     reason: ''
   })
   const [holidays, setHolidays] = useState<Holiday[]>([])
+  const [leavePolicies, setLeavePolicies] = useState<LeavePolicy[]>([])
+  const [leaveBalances, setLeaveBalances] = useState<EmployeeLeaveBalance[]>([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
   const [holidayOverlap, setHolidayOverlap] = useState<Holiday[]>([])
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [availableBalance, setAvailableBalance] = useState<number>(0)
 
   useEffect(() => {
     fetchHolidays()
+    fetchLeavePolicies()
+    fetchLeaveBalances()
   }, [])
 
   useEffect(() => {
     if (formData.start_date && formData.end_date) {
       checkHolidayOverlap()
+      validateLeaveRequestForm()
     } else {
       setHolidayOverlap([])
+      setValidationErrors([])
+      setAvailableBalance(0)
     }
-  }, [formData.start_date, formData.end_date, holidays])
+  }, [formData.start_date, formData.end_date, formData.type, holidays, user])
 
+  const fetchLeavePolicies = async () => {
+    try {
+      const result = await getLeavePolicies(true)
+      if (result.success) {
+        setLeavePolicies(result.data)
+        // Set first policy as default if available
+        if (result.data.length > 0) {
+          setFormData(prev => ({ ...prev, type: result.data[0].code }))
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching leave policies:', error)
+    }
+  }
+
+  const fetchLeaveBalances = async () => {
+    if (!user) return
+    
+    try {
+      const result = await getEmployeeLeaveBalances(user.employee.employee_id)
+      if (result.success) {
+        setLeaveBalances(result.data)
+      }
+    } catch (error) {
+      console.error('Error fetching leave balances:', error)
+    }
+  }
+
+  const validateLeaveRequestForm = async () => {
+    if (!user || !formData.type || !formData.start_date || !formData.end_date) {
+      setValidationErrors([])
+      setAvailableBalance(0)
+      return
+    }
+
+    const days = calculateDays(formData.start_date, formData.end_date)
+    
+    try {
+      const result = await validateLeaveRequest(
+        user.employee.employee_id,
+        formData.type,
+        formData.start_date,
+        formData.end_date,
+        days
+      )
+      
+      setValidationErrors(result.errors)
+      setAvailableBalance(result.available_balance || 0)
+    } catch (error) {
+      console.error('Error validating leave request:', error)
+      setValidationErrors(['Validation failed'])
+    }
+  }
   const fetchHolidays = async () => {
     try {
       const currentYear = new Date().getFullYear()
@@ -122,6 +191,13 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
     e.preventDefault()
     setLoading(true)
     setMessage({ type: '', text: '' })
+
+    // Validate the request first
+    if (validationErrors.length > 0) {
+      setMessage({ type: 'error', text: 'Please fix validation errors before submitting' })
+      setLoading(false)
+      return
+    }
 
     if (new Date(formData.end_date) < new Date(formData.start_date)) {
       setMessage({ type: 'error', text: 'End date cannot be before start date' })
@@ -214,6 +290,9 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
     end: formData.end_date
   } : undefined
 
+  const selectedPolicy = leavePolicies.find(p => p.code === formData.type)
+  const selectedBalance = leaveBalances.find(b => b.policy?.code === formData.type)
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto p-3 sm:p-4 lg:p-6">
@@ -238,6 +317,23 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
             <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Leave Request Details</h2>
             
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+              {/* Validation Errors */}
+              {validationErrors.length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <div className="flex items-start">
+                    <AlertTriangle className="h-4 w-4 text-red-600 mr-2 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-sm font-medium text-red-800">Validation Errors:</h4>
+                      <ul className="text-sm text-red-700 mt-1 space-y-1">
+                        {validationErrors.map((error, index) => (
+                          <li key={index}>• {error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Leave Type
@@ -247,14 +343,56 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                   className="w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
                 >
-                  <option value="Annual">Annual Leave</option>
-                  <option value="Sick">Sick Leave</option>
-                  <option value="Personal">Personal Leave</option>
-                  <option value="Maternity">Maternity Leave</option>
-                  <option value="Paternity">Paternity Leave</option>
-                  <option value="Emergency">Emergency Leave</option>
+                  {leavePolicies.map(policy => (
+                    <option key={policy.code} value={policy.code}>
+                      {policy.name}
+                    </option>
+                  ))}
                 </select>
+                
+                {/* Policy Info */}
+                {selectedPolicy && (
+                  <div className="mt-2 text-xs text-gray-500">
+                    {selectedPolicy.description && (
+                      <p>{selectedPolicy.description}</p>
+                    )}
+                    <div className="flex items-center justify-between mt-1">
+                      <span>Annual Entitlement: {selectedPolicy.annual_entitlement} days</span>
+                      {selectedPolicy.max_consecutive_days && (
+                        <span>Max Consecutive: {selectedPolicy.max_consecutive_days} days</span>
+                      )}
+                    </div>
+                    {selectedPolicy.advance_notice_days > 0 && (
+                      <p className="mt-1">Advance Notice Required: {selectedPolicy.advance_notice_days} days</p>
+                    )}
+                  </div>
+                )}
               </div>
+
+              {/* Leave Balance Display */}
+              {selectedBalance && (
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-2 sm:p-3">
+                  <h3 className="text-sm sm:text-base font-medium text-blue-900 mb-2 sm:mb-3">Your Leave Balance</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-sm">
+                    <div>
+                      <span className="text-blue-700">Available:</span>
+                      <span className="font-medium ml-2">{selectedBalance.available_balance}</span>
+                    </div>
+                    <div>
+                      <span className="text-blue-700">Used:</span>
+                      <span className="font-medium ml-2">{selectedBalance.used_balance}</span>
+                    </div>
+                    <div>
+                      <span className="text-blue-700">Entitlement:</span>
+                      <span className="font-medium ml-2">{selectedBalance.annual_entitlement}</span>
+                    </div>
+                    <div>
+                      <span className="text-blue-700">Pending:</span>
+                      <span className="font-medium ml-2">{selectedBalance.pending_balance}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
@@ -297,6 +435,18 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
                       <span className="text-blue-700">Working Days:</span>
                       <span className="font-medium ml-2">{calculateWorkingDays(formData.start_date, formData.end_date)}</span>
                     </div>
+                    {availableBalance > 0 && (
+                      <div className="sm:col-span-2">
+                        <span className="text-blue-700">Balance After Request:</span>
+                        <span className={`font-medium ml-2 ${
+                          availableBalance - calculateDays(formData.start_date, formData.end_date) < 0 
+                            ? 'text-red-600' 
+                            : 'text-green-600'
+                        }`}>
+                          {availableBalance - calculateDays(formData.start_date, formData.end_date)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -342,7 +492,7 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || validationErrors.length > 0}
                   className="flex-1 bg-blue-600 text-white py-3 sm:py-3.5 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm sm:text-base"
                 >
                   {loading ? (

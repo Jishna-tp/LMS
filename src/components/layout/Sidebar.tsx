@@ -56,6 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
     { id: 'profile', label: 'Profile', icon: User, roles: ['Employee', 'Manager', 'HR', 'Admin'] },
     { id: 'leaves', label: 'Leaves', icon: Calendar, roles: ['Employee', 'Manager', 'HR', 'Admin'] },
     { id: 'calendar', label: 'Calendar', icon: CalendarDays, roles: ['Employee', 'Manager', 'HR', 'Admin'] },
+    { id: 'leave-policies', label: 'Leave Policies', icon: Settings, roles: ['HR', 'Admin'] },
     { id: 'employees', label: 'Employees', icon: Users, roles: ['Admin'] },
     { id: 'holidays', label: 'Holidays', icon: Gift, roles: ['Admin'] },
     { id: 'reports', label: 'Reports', icon: BarChart3, roles: ['HR', 'Admin'] },
