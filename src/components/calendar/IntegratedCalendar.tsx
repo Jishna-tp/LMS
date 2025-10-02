@@ -113,6 +113,7 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
             employees:employee_id (id, name, department)
           `)
           .or(`start_date.lte.${formatDateToYYYYMMDD(endDate)},end_date.gte.${formatDateToYYYYMMDD(startDate)}`)
+          .eq('employee_id', user?.employee.employee_id) // Only show current user's leaves
 
         // Apply filters
         if (filters.department !== 'all') {
@@ -147,11 +148,11 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
                 eventDateStr <= formatDateToYYYYMMDD(endDate)) {
               events.push({
                 id: `leave-${leave.id}-${eventDateStr}`,
-                title: `${leave.employees?.name || 'Unknown'} - ${leave.type}`,
+                title: `${leave.type} Leave`,
                 date: eventDateStr,
                 type: 'leave',
                 status: leave.status,
-                employee: leave.employees?.name,
+                employee: user?.employee.name,
                 department: leave.employees?.department,
                 leaveType: leave.type,
                 color: getLeaveColor(leave.status)
@@ -420,17 +421,6 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
       {!compact && (
         <div className="mb-4 flex flex-wrap gap-2">
           <select
-            value={filters.department}
-            onChange={(e) => setFilters({ ...filters, department: e.target.value })}
-            className="text-sm px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="all">All Departments</option>
-            {departments.map(dept => (
-              <option key={dept} value={dept}>{dept}</option>
-            ))}
-          </select>
-
-          <select
             value={filters.leaveType}
             onChange={(e) => setFilters({ ...filters, leaveType: e.target.value })}
             className="text-sm px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -511,9 +501,8 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
           <div className="text-gray-300">{formatDateToDDMMYYYY(parseDateString(hoveredEvent.date))}</div>
           {hoveredEvent.type === 'leave' && (
             <>
-              {hoveredEvent.employee && <div>Employee: {hoveredEvent.employee}</div>}
-              {hoveredEvent.department && <div>Department: {hoveredEvent.department}</div>}
               {hoveredEvent.status && <div>Status: {hoveredEvent.status}</div>}
+              {hoveredEvent.leaveType && <div>Type: {hoveredEvent.leaveType}</div>}
             </>
           )}
           {hoveredEvent.description && (
