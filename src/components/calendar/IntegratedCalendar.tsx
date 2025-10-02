@@ -133,11 +133,65 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
             return
           }
           
-          const startDate = new Date(leave.start_date)
-          const endDate = new Date(leave.end_date)
+          const leaveStartDate = new Date(leave.start_date)
+          const leaveEndDate = new Date(leave.end_date)
           
           // Create events for each day of the leave
-          for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+          for (let d = new Date(leaveStartDate); d <= leaveEndDate; d.setDate(d.getDate() + 1)) {
+            const eventDateStr = d.toISOString().split('T')[0]
+            
+            // Only show events within the current view date range
+            if (eventDateStr >= startDate.toISOString().split('T')[0] && 
+                eventDateStr <= endDate.toISOString().split('T')[0]) {
+              events.push({
+                id: `leave-${leave.id}-${eventDateStr}`,
+                title: `${leave.employees?.name || 'Unknown'} - ${leave.type}`,
+                date: eventDateStr,
+                type: 'leave',
+                status: leave.status,
+                employee: leave.employees?.name,
+                department: leave.employees?.department,
+                leaveType: leave.type,
+                color: getLeaveColor(leave.status)
+              })
+            }
+          }
+        })
+      }
+
+      setEvents(events)
+    } catch (error) {
+      console.error('Error fetching calendar data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getViewStartDate = () => {
+    const date = new Date(currentDate)
+    if (view === 'month') {
+      return new Date(date.getFullYear(), date.getMonth(), 1)
+    } else if (view === 'week') {
+      const day = date.getDay()
+      const diff = date.getDate() - day
+      return new Date(date.setDate(diff))
+    } else {
+      return new Date(date.setHours(0, 0, 0, 0))
+    }
+  }
+
+  const getViewEndDate = () => {
+    const date = new Date(currentDate)
+    if (view === 'month') {
+      return new Date(date.getFullYear(), date.getMonth() + 1, 0)
+    } else if (view === 'week') {
+      const day = date.getDay()
+      const diff = date.getDate() - day + 6
+      return new Date(date.setDate(diff))
+    } else {
+      return new Date(date.setHours(23, 59, 59, 999))
+    }
+  }
             events.push({
               id: `leave-${leave.id}-${d.toISOString().split('T')[0]}`,
               title: `${leave.employees?.name || 'Unknown'} - ${leave.type}`,
