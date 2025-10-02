@@ -133,11 +133,12 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
             return
           }
           
-          const leaveStartDate = new Date(leave.start_date)
-          const leaveEndDate = new Date(leave.end_date)
+          // Parse dates as local dates to avoid timezone issues
+          const leaveStartDate = new Date(leave.start_date + 'T00:00:00')
+          const leaveEndDate = new Date(leave.end_date + 'T00:00:00')
           
           // Create events for each day of the leave
-         for (let d = new Date(leaveStartDate); d <= leaveEndDate; d = new Date(d.getTime() + 24 * 60 * 60 * 1000)) {
+         for (let d = new Date(leaveStartDate); d <= leaveEndDate; d.setDate(d.getDate() + 1)) {
             const eventDateStr = d.toISOString().split('T')[0]
             
             // Only show events within the current view date range
