@@ -7,10 +7,15 @@ export const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Check if Supabase is properly configured
 export const isSupabaseConfigured = () => {
-  return import.meta.env.VITE_SUPABASE_URL && 
-         import.meta.env.VITE_SUPABASE_ANON_KEY &&
-         import.meta.env.VITE_SUPABASE_URL !== 'https://placeholder.supabase.co' &&
-         import.meta.env.VITE_SUPABASE_ANON_KEY !== 'placeholder-key'
+  const url = import.meta.env.VITE_SUPABASE_URL
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY
+  
+  return url && 
+         key &&
+         url !== 'https://placeholder.supabase.co' &&
+         key !== 'placeholder-key' &&
+         url.startsWith('https://') &&
+         key.length > 20
 }
 
 export type Database = {
