@@ -192,54 +192,6 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
       return new Date(date.setHours(23, 59, 59, 999))
     }
   }
-            events.push({
-              id: `leave-${leave.id}-${d.toISOString().split('T')[0]}`,
-              title: `${leave.employees?.name || 'Unknown'} - ${leave.type}`,
-              date: d.toISOString().split('T')[0],
-              type: 'leave',
-              status: leave.status,
-              employee: leave.employees?.name,
-              department: leave.employees?.department,
-              leaveType: leave.type,
-              color: getLeaveColor(leave.status)
-            })
-          }
-        })
-      }
-
-      setEvents(events)
-    } catch (error) {
-      console.error('Error fetching calendar data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const getViewStartDate = () => {
-    const date = new Date(currentDate)
-    if (view === 'month') {
-      return new Date(date.getFullYear(), date.getMonth(), 1)
-    } else if (view === 'week') {
-      const day = date.getDay()
-      const diff = date.getDate() - day
-      return new Date(date.setDate(diff))
-    } else {
-      return new Date(date.setHours(0, 0, 0, 0))
-    }
-  }
-
-  const getViewEndDate = () => {
-    const date = new Date(currentDate)
-    if (view === 'month') {
-      return new Date(date.getFullYear(), date.getMonth() + 1, 0)
-    } else if (view === 'week') {
-      const day = date.getDay()
-      const diff = date.getDate() - day + 6
-      return new Date(date.setDate(diff))
-    } else {
-      return new Date(date.setHours(23, 59, 59, 999))
-    }
-  }
 
   const getHolidayColor = (type: string) => {
     switch (type) {
