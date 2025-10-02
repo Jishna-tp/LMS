@@ -87,8 +87,8 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
         const { data: holidays, error: holidayError } = await supabase
           .from('holidays')
           .select('*')
-          .gte('date', startDate.toISOString().split('T')[0])
-          .lte('date', endDate.toISOString().split('T')[0])
+          .gte('date', formatDateToYYYYMMDD(startDate))
+          .lte('date', formatDateToYYYYMMDD(endDate))
 
         if (holidayError) throw holidayError
 
@@ -112,7 +112,7 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
             *,
             employees:employee_id (id, name, department)
           `)
-          .or(`start_date.lte.${endDate.toISOString().split('T')[0]},end_date.gte.${startDate.toISOString().split('T')[0]}`)
+          .or(`start_date.lte.${formatDateToYYYYMMDD(endDate)},end_date.gte.${formatDateToYYYYMMDD(startDate)}`)
 
         // Apply filters
         if (filters.department !== 'all') {
@@ -138,12 +138,13 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
           const leaveEndDate = new Date(leave.end_date + 'T00:00:00')
           
           // Create events for each day of the leave
-         for (let d = new Date(leaveStartDate); d <= leaveEndDate; d.setDate(d.getDate() + 1)) {
-            const eventDateStr = d.toISOString().split('T')[0]
+         const currentDate = new Date(leaveStartDate)
+         while (currentDate <= leaveEndDate) {
+            const eventDateStr = formatDateToYYYYMMDD(currentDate)
             
             // Only show events within the current view date range
-            if (eventDateStr >= startDate.toISOString().split('T')[0] && 
-                eventDateStr <= endDate.toISOString().split('T')[0]) {
+            if (eventDateStr >= formatDateToYYYYMMDD(startDate) && 
+                eventDateStr <= formatDateToYYYYMMDD(endDate)) {
               events.push({
                 id: `leave-${leave.id}-${eventDateStr}`,
                 title: `${leave.employees?.name || 'Unknown'} - ${leave.type}`,
@@ -156,6 +157,7 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
                 color: getLeaveColor(leave.status)
               })
             }
+            currentDate.setDate(currentDate.getDate() + 1)
           }
         })
       }
@@ -168,6 +170,34 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
     }
   }
 
+  const formatDateToYYYYMMDD = (date: Date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  const formatDateToDDMMYYYY = (date: Date) => {
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}-${month}-${year}`
+  }
+
+  const parseDateString = (dateStr: string) => {
+    // Handle both YYYY-MM-DD and DD-MM-YYYY formats
+    if (dateStr.includes('-')) {
+      const parts = dateStr.split('-')
+      if (parts[0].length === 4) {
+        // YYYY-MM-DD format
+        return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]))
+      } else {
+        // DD-MM-YYYY format
+        return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]))
+      }
+    }
+    return new Date(dateStr)
+  }
   const getViewStartDate = () => {
     const date = new Date(currentDate)
     if (view === 'month') {
@@ -285,10 +315,10 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
         
         {/* Calendar days */}
         {days.map((day, index) => {
-          const dateStr = day.toISOString().split('T')[0]
+          const dateStr = formatDateToYYYYMMDD(day)
           const dayEvents = events.filter(event => event.date === dateStr)
           const isCurrentMonth = day.getMonth() === currentDate.getMonth()
-          const isToday = dateStr === new Date().toISOString().split('T')[0]
+          const isToday = dateStr === formatDateToYYYYMMDD(new Date())
           const isSelected = isDateSelected(dateStr)
           
           return (
@@ -331,13 +361,13 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
 
   const formatDateHeader = () => {
     if (view === 'month') {
-      return currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      return currentDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
     } else if (view === 'week') {
       const start = getViewStartDate()
       const end = getViewEndDate()
-      return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+      return `${formatDateToDDMMYYYY(start)} - ${formatDateToDDMMYYYY(end)}`
     } else {
-      return currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+      return currentDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
     }
   }
 
@@ -478,7 +508,7 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
           }}
         >
           <div className="font-medium">{hoveredEvent.title}</div>
-          <div className="text-gray-300">{new Date(hoveredEvent.date).toLocaleDateString()}</div>
+          <div className="text-gray-300">{formatDateToDDMMYYYY(parseDateString(hoveredEvent.date))}</div>
           {hoveredEvent.type === 'leave' && (
             <>
               {hoveredEvent.employee && <div>Employee: {hoveredEvent.employee}</div>}
