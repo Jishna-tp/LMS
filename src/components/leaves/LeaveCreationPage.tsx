@@ -371,7 +371,6 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
 
           {/* Right Side - Calendar */}
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Calendar View</h2>
             <p className="text-sm text-gray-600 mb-4">
               Click on dates to select your leave period. Holidays and existing leaves are shown for reference.
             </p>
