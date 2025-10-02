@@ -1,20 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Edit, 
-  Trash2, 
-  Settings, 
-  Users, 
-  Calendar,
-  AlertCircle,
-  CheckCircle,
-  BarChart3,
-  Clock,
-  Shield,
-  DollarSign
-} from 'lucide-react'
+import { Plus, Search, Filter, CreditCard as Edit, Trash2, Settings, Users, Calendar, AlertCircle, CheckCircle, BarChart3, Clock, Shield, DollarSign } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { 
   getLeavePolicies, 

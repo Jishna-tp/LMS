@@ -1,18 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { 
-  Users, 
-  Search, 
-  Filter, 
-  Download, 
-  RefreshCw,
-  Calendar,
-  TrendingUp,
-  TrendingDown,
-  AlertCircle,
-  CheckCircle,
-  Edit,
-  Plus
-} from 'lucide-react'
+import { Users, Search, Filter, Download, RefreshCw, Calendar, TrendingUp, TrendingDown, AlertCircle, CheckCircle, CreditCard as Edit, Plus } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { 
   getAllEmployeeBalances,
