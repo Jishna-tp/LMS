@@ -219,13 +219,6 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Header */}
         <div className="mb-6">
-          <button
-            onClick={onBack}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Leave Management
-          </button>
         </div>
 
         {message.text && (
