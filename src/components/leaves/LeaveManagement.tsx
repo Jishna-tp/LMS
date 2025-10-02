@@ -113,7 +113,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           // 1. Requests from Employees that are approved by manager but not yet by HR
           // 2. Direct requests from Admin/Manager roles (status = Pending)
           // 3. Requests already approved by this HR user for tracking
-          query = query.or(`and(status.eq.Approved,approved_by_hr.is.null),and(status.eq.Pending,employees.role.in.(Manager,Admin)),approved_by_hr.eq.${user.employee.id}`)
+          query = query.or(`and(status.eq.Approved,approved_by_hr.is.null),and(status.eq.Pending,employees.role.in.("Manager","Admin")),approved_by_hr.eq.${user.employee.id}`)
         } else {
           // Other roles don't have approve tab
           query = query.eq('employee_id', 'no-approval-access')
