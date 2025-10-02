@@ -128,6 +128,11 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
         if (leaveError) throw leaveError
 
         leaves?.forEach(leave => {
+          // Skip rejected leaves
+          if (leave.status === 'Rejected') {
+            return
+          }
+          
           const startDate = new Date(leave.start_date)
           const endDate = new Date(leave.end_date)
           
