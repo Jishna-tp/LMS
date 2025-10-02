@@ -137,7 +137,7 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
           const leaveEndDate = new Date(leave.end_date)
           
           // Create events for each day of the leave
-          for (let d = new Date(leaveStartDate); d <= leaveEndDate; d.setDate(d.getDate() + 1)) {
+         for (let d = new Date(leaveStartDate); d <= leaveEndDate; d = new Date(d.getTime() + 24 * 60 * 60 * 1000)) {
             const eventDateStr = d.toISOString().split('T')[0]
             
             // Only show events within the current view date range
