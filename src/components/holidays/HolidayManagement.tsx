@@ -366,7 +366,7 @@ export const HolidayManagement: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="mb-6 flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4">
+      <div className="mb-6 flex flex-row flex-wrap gap-2 sm:gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
@@ -374,16 +374,16 @@ export const HolidayManagement: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search holidays..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            className="w-full min-w-[200px] pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
           />
         </div>
         
-        <div className="relative">
+        <div className="relative min-w-[120px]">
           <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none"
+            className="w-full pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none text-sm"
           >
             <option value="all">All Types</option>
             {holidayTypes.map(type => (
@@ -392,12 +392,12 @@ export const HolidayManagement: React.FC = () => {
           </select>
         </div>
         
-        <div className="relative">
+        <div className="relative min-w-[100px]">
           <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <select
             value={yearFilter}
             onChange={(e) => setYearFilter(e.target.value)}
-            className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none"
+            className="w-full pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none text-sm"
           >
             {years.map(year => (
               <option key={year} value={year}>{year}</option>
