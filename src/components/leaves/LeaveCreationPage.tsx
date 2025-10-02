@@ -226,7 +226,6 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Leave Management
           </button>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create Leave Request</h1>
         </div>
 
         {message.text && (
