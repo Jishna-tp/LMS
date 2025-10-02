@@ -215,33 +215,42 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
   } : undefined
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-auto">
-      <div className="max-w-6xl mx-auto p-4 sm:p-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto p-3 sm:p-4 lg:p-6">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
+          <button
+            onClick={onBack}
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            <span className="text-sm sm:text-base">Back to Leave Management</span>
+          </button>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Create Leave Request</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Submit a new leave request for approval</p>
         </div>
 
         {message.text && (
-          <div className={`mb-6 p-4 rounded-lg flex items-center ${
+          <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg flex items-start sm:items-center ${
             message.type === 'success' 
               ? 'bg-green-50 border border-green-200 text-green-800' 
               : 'bg-red-50 border border-red-200 text-red-800'
           }`}>
             {message.type === 'success' ? (
-              <CheckCircle className="h-4 w-4 mr-2" />
+              <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0 mt-0.5 sm:mt-0" />
             ) : (
-              <AlertTriangle className="h-4 w-4 mr-2" />
+              <AlertTriangle className="h-4 w-4 mr-2 flex-shrink-0 mt-0.5 sm:mt-0" />
             )}
-            {message.text}
+            <span className="text-sm sm:text-base">{message.text}</span>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
           {/* Left Side - Leave Request Form */}
-          <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Leave Request Details</h2>
+          <div className="xl:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Leave Request Details</h2>
             
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Leave Type
@@ -249,7 +258,7 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
                 >
                   <option value="Annual">Annual Leave</option>
                   <option value="Sick">Sick Leave</option>
@@ -260,7 +269,7 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
                 </select>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Start Date
@@ -269,7 +278,7 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
                     type="date"
                     value={formData.start_date}
                     onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
                     required
                   />
                 </div>
@@ -282,7 +291,7 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
                     type="date"
                     value={formData.end_date}
                     onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
                     required
                   />
                 </div>
@@ -290,9 +299,9 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
 
               {/* Duration Summary */}
               {formData.start_date && formData.end_date && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-blue-900 mb-2">Duration Summary</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                  <h3 className="text-sm sm:text-base font-medium text-blue-900 mb-2 sm:mb-3">Duration Summary</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
                     <div>
                       <span className="text-blue-700">Total Days:</span>
                       <span className="font-medium ml-2">{calculateDays(formData.start_date, formData.end_date)}</span>
@@ -307,20 +316,20 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
 
               {/* Holiday Overlap Warning */}
               {holidayOverlap.length > 0 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
                   <div className="flex items-start">
-                    <Info className="h-4 w-4 text-yellow-600 mr-2 mt-0.5" />
+                    <Info className="h-4 w-4 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" />
                     <div>
-                      <h3 className="text-sm font-medium text-yellow-900 mb-2">
+                      <h3 className="text-sm sm:text-base font-medium text-yellow-900 mb-2">
                         Holiday Overlap Detected
                       </h3>
                       <p className="text-sm text-yellow-800 mb-2">
                         Your leave dates overlap with {holidayOverlap.length} company holiday(s):
                       </p>
-                      <ul className="text-sm text-yellow-800 space-y-1">
+                      <ul className="text-sm text-yellow-800 space-y-1 ml-2">
                         {holidayOverlap.map(holiday => (
                           <li key={holiday.id} className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-2" />
+                            <Calendar className="h-3 w-3 mr-2 flex-shrink-0" />
                             {holiday.name} - {new Date(holiday.date).toLocaleDateString()}
                           </li>
                         ))}
@@ -337,21 +346,21 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
                 <textarea
                   value={formData.reason}
                   onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base resize-none"
                   rows={4}
                   placeholder="Reason for leave request..."
                 />
               </div>
 
-              <div className="flex space-x-4 pt-4">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                  className="flex-1 bg-blue-600 text-white py-3 sm:py-3.5 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm sm:text-base"
                 >
                   {loading ? (
                     <div className="flex items-center justify-center">
-                      <Clock className="h-4 w-4 mr-2 animate-spin" />
+                      <Clock className="h-4 w-4 mr-2 animate-spin flex-shrink-0" />
                       Submitting...
                     </div>
                   ) : (
@@ -361,7 +370,7 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
                 <button
                   type="button"
                   onClick={onBack}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors font-medium"
+                  className="sm:flex-shrink-0 px-6 py-3 sm:py-3.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors font-medium text-sm sm:text-base"
                 >
                   Cancel
                 </button>
@@ -370,7 +379,35 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
           </div>
 
           {/* Right Side - Calendar */}
-          <div>
+          <div className="xl:col-span-1">
+            <div className="sticky top-4">
+              <p className="text-sm text-gray-600 mb-3 sm:mb-4 px-1">
+                Click on dates to select your leave period. Holidays and existing leaves are shown for reference.
+              </p>
+              <IntegratedCalendar 
+                onDateSelect={handleDateSelect}
+                selectedDates={selectedDates}
+                compact={true}
+              />
+              
+              {/* Quick Tips */}
+              <div className="mt-3 sm:mt-4 bg-gray-50 rounded-lg p-3 sm:p-4">
+                <h3 className="text-sm font-medium text-gray-900 mb-2">Quick Tips</h3>
+                <ul className="text-xs sm:text-sm text-gray-600 space-y-1">
+                  <li>• Click a date to set start date, click another to set end date</li>
+                  <li>• Red events are holidays, green/yellow are existing leaves</li>
+                  <li>• Weekends and holidays don't count as working days</li>
+                  <li>• Your selected dates are highlighted in blue</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Calendar - Show below form on mobile */}
+        <div className="xl:hidden mt-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Select Dates</h3>
             <p className="text-sm text-gray-600 mb-4">
               Click on dates to select your leave period. Holidays and existing leaves are shown for reference.
             </p>
@@ -381,7 +418,7 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
             />
             
             {/* Quick Tips */}
-            <div className="mt-4 bg-gray-50 rounded-lg p-4">
+            <div className="mt-4 bg-gray-50 rounded-lg p-3">
               <h3 className="text-sm font-medium text-gray-900 mb-2">Quick Tips</h3>
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• Click a date to set start date, click another to set end date</li>

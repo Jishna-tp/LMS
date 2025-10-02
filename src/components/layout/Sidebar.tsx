@@ -70,38 +70,38 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
       {/* Mobile backdrop */}
       {isOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
           onClick={onToggle}
         />
       )}
 
       {/* Sidebar */}
       <div className={`
-        fixed top-0 left-0 h-full w-64 bg-white shadow-xl z-50 transition-transform duration-300 ease-in-out
+        fixed top-0 left-0 h-full w-64 sm:w-72 bg-white shadow-xl z-50 transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:z-auto lg:h-full
         flex flex-col
       `}>
-        <div className="p-6 lg:p-6 border-b border-gray-200">
+        <div className="p-4 sm:p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h1 className="text-lg sm:text-xl font-bold text-gray-900">EMS</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">EMS</h1>
             <button
               onClick={onToggle}
-              className="lg:hidden p-1 rounded-md hover:bg-gray-100"
+              className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
           </div>
           {user && (
-            <div className="mt-4">
-              <p className="text-sm font-medium text-gray-900 truncate">{user.employee.name}</p>
-              <p className="text-xs text-gray-500 truncate">{user.employee.role}</p>
-              <p className="text-xs text-gray-500 truncate">{user.employee.employee_id}</p>
+            <div className="mt-3 sm:mt-4">
+              <p className="text-sm sm:text-base font-medium text-gray-900 truncate">{user.employee.name}</p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{user.employee.role}</p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{user.employee.employee_id}</p>
             </div>
           )}
         </div>
 
-        <nav className="flex-1 p-4 lg:p-4 space-y-2">
+        <nav className="flex-1 p-3 sm:p-4 space-y-1 sm:space-y-2 overflow-y-auto">
           {filteredMenuItems.map((item) => {
             const Icon = item.icon
             const showNotificationBadge = item.id === 'leaves' && unreadCount > 0
@@ -122,10 +122,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
               >
                 <div className="flex items-center">
                   <Icon className={`h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 ${activeTab === item.id ? 'text-blue-700' : 'text-gray-400'}`} />
-                  <span className="text-sm sm:text-base">{item.label}</span>
+                  <span className="text-sm sm:text-base font-medium">{item.label}</span>
                 </div>
                 {showNotificationBadge && (
-                  <span className="bg-red-500 text-white text-xs rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 min-w-[18px] sm:min-w-[20px] text-center">
+                  <span className="bg-red-500 text-white text-xs rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 min-w-[18px] sm:min-w-[20px] text-center font-medium">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
@@ -134,10 +134,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
           })}
         </nav>
 
-        <div className="p-4 lg:p-4 border-t border-gray-200">
+        <div className="p-3 sm:p-4 border-t border-gray-200">
           <button
             onClick={logout}
-            className="w-full flex items-center px-3 sm:px-4 py-3 text-left rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+            className="w-full flex items-center px-3 sm:px-4 py-3 text-left rounded-lg text-red-600 hover:bg-red-50 transition-colors font-medium"
           >
             <LogOut className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
             <span className="text-sm sm:text-base">Sign Out</span>
