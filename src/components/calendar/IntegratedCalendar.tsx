@@ -418,7 +418,7 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
       </div>
 
       {/* Filters */}
-      {!compact && (
+      {!compact && false && (
         <div className="mb-4 flex flex-wrap gap-2">
           <select
             value={filters.leaveType}
@@ -457,7 +457,7 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
       )}
 
       {/* Legend */}
-      {!compact && (
+      {!compact && false && (
         <div className="mb-4 flex flex-wrap gap-4 text-xs">
           <div className="flex items-center space-x-1">
             <div className="w-3 h-3 bg-red-500 rounded"></div>
