@@ -7,10 +7,15 @@ export const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Check if Supabase is properly configured
 export const isSupabaseConfigured = () => {
-  return import.meta.env.VITE_SUPABASE_URL && 
-         import.meta.env.VITE_SUPABASE_ANON_KEY &&
-         import.meta.env.VITE_SUPABASE_URL !== 'https://placeholder.supabase.co' &&
-         import.meta.env.VITE_SUPABASE_ANON_KEY !== 'placeholder-key'
+  const url = import.meta.env.VITE_SUPABASE_URL
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY
+  
+  return url && 
+         key &&
+         url !== 'https://placeholder.supabase.co' &&
+         key !== 'placeholder-key' &&
+         url.startsWith('https://') &&
+         key.length > 20
 }
 
 export type Database = {
@@ -192,6 +197,41 @@ export type Database = {
           is_read?: boolean
           related_leave_id?: string | null
           created_at?: string
+        }
+      }
+      holidays: {
+        Row: {
+          id: string
+          name: string
+          date: string
+          type: string
+          is_recurring: boolean
+          description: string | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          date: string
+          type?: string
+          is_recurring?: boolean
+          description?: string | null
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          date?: string
+          type?: string
+          is_recurring?: boolean
+          description?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
         }
       }
     }

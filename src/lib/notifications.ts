@@ -93,7 +93,11 @@ export const markAllNotificationsAsRead = async (userId: string) => {
 }
 
 // Get unread notification count
-export const getUnreadNotificationCount = async (userId: string): Promise<number> => {
+export const getUnreadNotificationCount = async (userId: string) => {
+  if (!isSupabaseConfigured()) {
+    return { success: true, count: 0 }
+  }
+
   try {
     const { data, error } = await supabase
       .from('notifications')
@@ -103,12 +107,12 @@ export const getUnreadNotificationCount = async (userId: string): Promise<number
 
     if (error) {
       console.error('Error fetching unread notification count:', error)
-      return 0
+      return { success: false, count: 0, error: error.message }
     }
 
-    return data?.length || 0
+    return { success: true, count: data?.length || 0 }
   } catch (networkError) {
     console.error('Network error fetching unread notification count:', networkError)
-    return 0
+    return { success: false, count: 0, error: 'Network error' }
   }
 }

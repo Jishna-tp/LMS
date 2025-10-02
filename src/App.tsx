@@ -7,14 +7,18 @@ import { Header } from './components/layout/Header'
 import { Dashboard } from './components/dashboard/Dashboard'
 import { Profile } from './components/profile/Profile'
 import { LeaveManagement } from './components/leaves/LeaveManagement'
+import { LeaveCreationPage } from './components/leaves/LeaveCreationPage'
 import { EmployeeManagement } from './components/employees/EmployeeManagement'
+import { HolidayManagement } from './components/holidays/HolidayManagement'
 import { Reports } from './components/reports/Reports'
+import { IntegratedCalendar } from './components/calendar/IntegratedCalendar'
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth()
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
   const [activeTab, setActiveTab] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showLeaveCreation, setShowLeaveCreation] = useState(false)
 
   // Reset to dashboard when user changes (sign in/out)
   React.useEffect(() => {
@@ -50,21 +54,41 @@ const AppContent: React.FC = () => {
       case 'profile': return 'Profile'
       case 'leaves': return 'Leave Management'
       case 'employees': return 'Employee Management'
+      case 'holidays': return 'Holiday Management'
+      case 'calendar': return 'Calendar'
       case 'reports': return 'Reports'
       default: return 'Dashboard'
     }
   }
 
   const renderContent = () => {
+    if (showLeaveCreation) {
+      return (
+        <LeaveCreationPage 
+          onBack={() => setShowLeaveCreation(false)}
+          onLeaveCreated={handleLeaveSubmitted}
+        />
+      )
+    }
+
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard />
       case 'profile':
         return <Profile />
       case 'leaves':
-        return <LeaveManagement onLeaveSubmitted={handleLeaveSubmitted} />
+        return (
+          <LeaveManagement 
+            onLeaveSubmitted={handleLeaveSubmitted}
+            onCreateLeave={() => setShowLeaveCreation(true)}
+          />
+        )
       case 'employees':
         return <EmployeeManagement />
+      case 'holidays':
+        return <HolidayManagement />
+      case 'calendar':
+        return <IntegratedCalendar />
       case 'reports':
         return <Reports />
       default:
@@ -73,7 +97,7 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="h-screen w-full bg-gray-50 flex overflow-hidden">
+    <div className="h-screen w-full bg-gray-50 flex overflow-hidden relative">
       <Sidebar
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -81,13 +105,13 @@ const AppContent: React.FC = () => {
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
       
-      <div className="flex-1 flex flex-col h-full overflow-hidden lg:ml-64">
+      <div className="flex-1 flex flex-col h-full overflow-hidden lg:ml-64 xl:ml-72">
         <Header
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
-          title={getTabTitle(activeTab)}
+          title={showLeaveCreation ? 'Create Leave Request' : getTabTitle(activeTab)}
         />
         
-        <main className="flex-1 overflow-auto">
+        <main className={`flex-1 ${showLeaveCreation ? 'overflow-auto' : 'overflow-auto'}`}>
           {renderContent()}
         </main>
       </div>

@@ -33,12 +33,12 @@ export const Dashboard: React.FC = () => {
   }, [user])
 
   const fetchDashboardData = async () => {
-    if (!isSupabaseConfigured()) {
-      setLoading(false)
-      return
-    }
-
     try {
+      if (!isSupabaseConfigured()) {
+        setLoading(false)
+        return
+      }
+
       // Get total employees (Admin only)
       let totalEmployees = 0
       if (user?.employee.role === 'Admin') {
@@ -108,6 +108,14 @@ export const Dashboard: React.FC = () => {
       setRecentLeaves(recentLeavesData || [])
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
+      // Set default values on error to prevent UI issues
+      setStats({
+        totalEmployees: 0,
+        pendingLeaves: 0,
+        approvedLeaves: 0,
+        myPendingLeaves: 0
+      })
+      setRecentLeaves([])
     } finally {
       setLoading(false)
     }
