@@ -9,7 +9,8 @@ import {
   Gift,
   BarChart3,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Settings
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { getUnreadNotificationCount } from '../../lib/notifications'
