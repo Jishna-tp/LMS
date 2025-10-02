@@ -94,6 +94,10 @@ export const markAllNotificationsAsRead = async (userId: string) => {
 
 // Get unread notification count
 export const getUnreadNotificationCount = async (userId: string): Promise<number> => {
+  if (!isSupabaseConfigured()) {
+    return 0
+  }
+
   try {
     const { data, error } = await supabase
       .from('notifications')
