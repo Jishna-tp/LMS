@@ -6,6 +6,7 @@ import { createNotification } from '../../lib/notifications'
 
 interface LeaveManagementProps {
   onLeaveSubmitted?: () => void
+  onCreateLeave?: () => void
 }
 
 interface LeaveRequest {
@@ -46,7 +47,7 @@ interface WorkflowStep {
   notes?: string
 }
 
-export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitted }) => {
+export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitted, onCreateLeave }) => {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<'requests' | 'approve'>('requests')
   const [leaves, setLeaves] = useState<LeaveRequest[]>([])
@@ -524,7 +525,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         </div>
         
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => onCreateLeave ? onCreateLeave() : setShowForm(true)}
           className="mt-3 sm:mt-0 flex items-center px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm sm:text-base"
         >
           <Plus className="h-4 w-4 mr-2" />

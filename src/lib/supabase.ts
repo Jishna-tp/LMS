@@ -194,6 +194,41 @@ export type Database = {
           created_at?: string
         }
       }
+      holidays: {
+        Row: {
+          id: string
+          name: string
+          date: string
+          type: string
+          is_recurring: boolean
+          description: string | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          date: string
+          type?: string
+          is_recurring?: boolean
+          description?: string | null
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          date?: string
+          type?: string
+          is_recurring?: boolean
+          description?: string | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

@@ -5,6 +5,8 @@ import {
   User, 
   Calendar, 
   Users, 
+  CalendarDays,
+  Gift,
   BarChart3,
   LogOut,
   ChevronRight
@@ -56,7 +58,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Employee', 'Manager', 'HR', 'Admin'] },
     { id: 'profile', label: 'Profile', icon: User, roles: ['Employee', 'Manager', 'HR', 'Admin'] },
     { id: 'leaves', label: 'Leaves', icon: Calendar, roles: ['Employee', 'Manager', 'HR', 'Admin'] },
+    { id: 'calendar', label: 'Calendar', icon: CalendarDays, roles: ['Employee', 'Manager', 'HR', 'Admin'] },
     { id: 'employees', label: 'Employees', icon: Users, roles: ['Admin'] },
+    { id: 'holidays', label: 'Holidays', icon: Gift, roles: ['Admin'] },
     { id: 'reports', label: 'Reports', icon: BarChart3, roles: ['HR', 'Admin'] },
   ]
 
