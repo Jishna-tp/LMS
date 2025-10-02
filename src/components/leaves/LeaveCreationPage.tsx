@@ -217,19 +217,6 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto p-3 sm:p-4 lg:p-6">
-        {/* Header */}
-        <div className="mb-4 sm:mb-6">
-          <button
-            onClick={onBack}
-            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            <span className="text-sm sm:text-base">Back to Leave Management</span>
-          </button>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Create Leave Request</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">Submit a new leave request for approval</p>
-        </div>
-
         {message.text && (
           <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg flex items-start sm:items-center ${
             message.type === 'success' 
@@ -248,7 +235,7 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
           {/* Left Side - Leave Request Form */}
           <div className="xl:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Leave Request Details</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Leave Request Details</h2>
             
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               <div>
@@ -299,7 +286,7 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
 
               {/* Duration Summary */}
               {formData.start_date && formData.end_date && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-2 sm:p-3">
                   <h3 className="text-sm sm:text-base font-medium text-blue-900 mb-2 sm:mb-3">Duration Summary</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
                     <div>
@@ -316,7 +303,7 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
 
               {/* Holiday Overlap Warning */}
               {holidayOverlap.length > 0 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-md p-2 sm:p-3">
                   <div className="flex items-start">
                     <Info className="h-4 w-4 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" />
                     <div>
@@ -381,7 +368,7 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
           {/* Right Side - Calendar */}
           <div className="xl:col-span-1">
             <div className="sticky top-4">
-              <p className="text-sm text-gray-600 mb-3 sm:mb-4 px-1">
+              <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 px-1">
                 Click on dates to select your leave period. Holidays and existing leaves are shown for reference.
               </p>
               <IntegratedCalendar 
@@ -389,17 +376,6 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
                 selectedDates={selectedDates}
                 compact={true}
               />
-              
-              {/* Quick Tips */}
-              <div className="mt-3 sm:mt-4 bg-gray-50 rounded-lg p-3 sm:p-4">
-                <h3 className="text-sm font-medium text-gray-900 mb-2">Quick Tips</h3>
-                <ul className="text-xs sm:text-sm text-gray-600 space-y-1">
-                  <li>• Click a date to set start date, click another to set end date</li>
-                  <li>• Red events are holidays, green/yellow are existing leaves</li>
-                  <li>• Weekends and holidays don't count as working days</li>
-                  <li>• Your selected dates are highlighted in blue</li>
-                </ul>
-              </div>
             </div>
           </div>
         </div>

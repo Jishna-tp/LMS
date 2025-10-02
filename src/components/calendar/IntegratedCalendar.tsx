@@ -280,6 +280,9 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
   const renderMonthView = () => {
     const startDate = getViewStartDate()
     const endDate = getViewEndDate()
+    const today = new Date()
+    const currentMonth = today.getMonth()
+    const currentYear = today.getFullYear()
     const days = []
     const current = new Date(startDate)
 
@@ -322,6 +325,13 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
           const isToday = dateStr === formatDateToYYYYMMDD(new Date())
           const isSelected = isDateSelected(dateStr)
           
+          // Only show dates up to current month
+          const dayMonth = day.getMonth()
+          const dayYear = day.getFullYear()
+          const isPastMonth = dayYear < currentYear || (dayYear === currentYear && dayMonth < currentMonth)
+          const isFutureMonth = dayYear > currentYear || (dayYear === currentYear && dayMonth > currentMonth)
+          const shouldHide = isPastMonth || isFutureMonth
+          
           return (
             <div
               key={index}
@@ -336,7 +346,7 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
                 {day.getDate()}
               </div>
               <div className="space-y-1">
-                {dayEvents.slice(0, compact ? 2 : 3).map(event => (
+                {!shouldHide && dayEvents.slice(0, compact ? 2 : 3).map(event => (
                   <div
                     key={event.id}
                     className={`text-xs px-1 py-0.5 rounded text-white truncate ${event.color}`}
@@ -347,7 +357,7 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
                     {event.title}
                   </div>
                 ))}
-                {dayEvents.length > (compact ? 2 : 3) && (
+                {!shouldHide && dayEvents.length > (compact ? 2 : 3) && (
                   <div className="text-xs text-gray-500">
                     +{dayEvents.length - (compact ? 2 : 3)} more
                   </div>
