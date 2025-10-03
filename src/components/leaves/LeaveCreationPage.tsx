@@ -209,11 +209,12 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
     const days = calculateDays(formData.start_date, formData.end_date)
 
     try {
-      let initialStatus = 'Pending'
+      let initialStatus = 'Submitted' // Default for employees
       
-      // HR requests are auto-approved
       if (user?.employee.role === 'HR') {
         initialStatus = 'Approved'
+      } else if (user?.employee.role === 'Manager' || user?.employee.role === 'Admin') {
+        initialStatus = 'Pending' // Manager/Admin requests go directly to HR
       }
 
       const { data: newLeave, error } = await supabase
