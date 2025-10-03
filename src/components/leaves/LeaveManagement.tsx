@@ -311,7 +311,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         } else if (user?.employee.role === 'Manager' || user?.employee.role === 'Admin') {
           initialStatus = 'Pending' // Manager/Admin requests go directly to HR
         } else {
-          initialStatus = 'Pending'
+          initialStatus = 'Submitted'
         }
 
         const { data: newLeave, error } = await supabase
