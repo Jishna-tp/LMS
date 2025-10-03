@@ -92,13 +92,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
               <ChevronRight className="h-5 w-5" />
             </button>
           </div>
-          {user && (
-            <div className="mt-3 sm:mt-4">
-              <p className="text-sm sm:text-base font-medium text-gray-900 truncate">{user.employee.name}</p>
-              <p className="text-xs sm:text-sm text-gray-500 truncate">{user.employee.role}</p>
-              <p className="text-xs sm:text-sm text-gray-500 truncate">{user.employee.employee_id}</p>
-            </div>
-          )}
         </div>
 
         <nav className="flex-1 p-3 sm:p-4 space-y-1 sm:space-y-2 overflow-y-auto">
