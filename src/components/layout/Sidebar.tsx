@@ -84,7 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
       `}>
         <div className="p-4 sm:p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">EMS</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Absentra</h1>
             <button
               onClick={onToggle}
               className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
