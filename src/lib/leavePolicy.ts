@@ -1,5 +1,19 @@
 import { supabase, isSupabaseConfigured } from './supabase'
 
+// Utility function to convert leave type codes to database format
+export const formatLeaveTypeForDb = (typeCode: string): string => {
+  const typeMapping: { [key: string]: string } = {
+    'ANNUAL': 'Annual',
+    'SICK': 'Sick',
+    'PERSONAL': 'Personal',
+    'MATERNITY': 'Maternity',
+    'PATERNITY': 'Paternity',
+    'EMERGENCY': 'Emergency'
+  }
+  
+  return typeMapping[typeCode] || typeCode
+}
+
 export interface LeavePolicy {
   id: string
   name: string

@@ -15,6 +15,7 @@ import {
   getLeavePolicies, 
   validateLeaveRequest, 
   getEmployeeLeaveBalances,
+  formatLeaveTypeForDb,
   type LeavePolicy,
   type EmployeeLeaveBalance 
 } from '../../lib/leavePolicy'
@@ -219,7 +220,7 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
         .from('leave_requests')
         .insert([{
           employee_id: user!.employee.employee_id,
-          type: formData.type,
+          type: formatLeaveTypeForDb(formData.type),
           start_date: formData.start_date,
           end_date: formData.end_date,
           days_requested: days,

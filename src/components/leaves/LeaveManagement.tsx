@@ -7,6 +7,7 @@ import {
   getLeavePolicies, 
   validateLeaveRequest, 
   getEmployeeLeaveBalances,
+  formatLeaveTypeForDb,
   type LeavePolicy,
   type EmployeeLeaveBalance 
 } from '../../lib/leavePolicy'
@@ -294,7 +295,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         const { error } = await supabase
           .from('leave_requests')
           .update({
-            type: formData.type,
+            type: formatLeaveTypeForDb(formData.type),
             start_date: formData.start_date,
             end_date: formData.end_date,
             days_requested: days,
@@ -317,7 +318,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           .from('leave_requests')
           .insert([{
             employee_id: user!.employee.employee_id,
-            type: formData.type,
+            type: formatLeaveTypeForDb(formData.type),
             start_date: formData.start_date,
             end_date: formData.end_date,
             days_requested: days,
