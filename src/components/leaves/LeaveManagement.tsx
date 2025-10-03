@@ -3,6 +3,14 @@ import { Plus, Calendar, Clock, CheckCircle, XCircle, FileText, Filter, Search, 
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { createNotification } from '../../lib/notifications'
+import { 
+  getLeavePolicies, 
+  validateLeaveRequest, 
+  getEmployeeLeaveBalances,
+  formatLeaveTypeForDb,
+  type LeavePolicy,
+  type EmployeeLeaveBalance 
+} from '../../lib/leavePolicy'
 
 interface LeaveManagementProps {
   onLeaveSubmitted?: () => void
@@ -58,17 +66,79 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
   const [editingLeave, setEditingLeave] = useState<LeaveRequest | null>(null)
   const [filter, setFilter] = useState('Pending')
   const [searchTerm, setSearchTerm] = useState('')
+  const [leavePolicies, setLeavePolicies] = useState<LeavePolicy[]>([])
+  const [leaveBalances, setLeaveBalances] = useState<EmployeeLeaveBalance[]>([])
   const [formData, setFormData] = useState({
-    type: 'Annual',
+    type: 'ANNUAL',
     start_date: '',
     end_date: '',
     reason: ''
   })
   const [message, setMessage] = useState({ type: '', text: '' })
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [availableBalance, setAvailableBalance] = useState<number>(0)
 
   useEffect(() => {
     fetchLeaves()
+    fetchLeavePolicies()
+    fetchLeaveBalances()
   }, [user, activeTab])
+
+  useEffect(() => {
+    if (formData.type && formData.start_date && formData.end_date && user) {
+      validateLeaveRequestForm()
+    }
+  }, [formData.type, formData.start_date, formData.end_date, user])
+
+  const fetchLeavePolicies = async () => {
+    try {
+      const result = await getLeavePolicies(true)
+      if (result.success) {
+        setLeavePolicies(result.data)
+      }
+    } catch (error) {
+      console.error('Error fetching leave policies:', error)
+    }
+  }
+
+  const fetchLeaveBalances = async () => {
+    if (!user) return
+    
+    try {
+      const result = await getEmployeeLeaveBalances(user.employee.employee_id)
+      if (result.success) {
+        setLeaveBalances(result.data)
+      }
+    } catch (error) {
+      console.error('Error fetching leave balances:', error)
+    }
+  }
+
+  const validateLeaveRequestForm = async () => {
+    if (!user || !formData.type || !formData.start_date || !formData.end_date) {
+      setValidationErrors([])
+      setAvailableBalance(0)
+      return
+    }
+
+    const days = calculateDays(formData.start_date, formData.end_date)
+    
+    try {
+      const result = await validateLeaveRequest(
+        user.employee.employee_id,
+        formData.type,
+        formData.start_date,
+        formData.end_date,
+        days
+      )
+      
+      setValidationErrors(result.errors)
+      setAvailableBalance(result.available_balance || 0)
+    } catch (error) {
+      console.error('Error validating leave request:', error)
+      setValidationErrors(['Validation failed'])
+    }
+  }
 
   const fetchLeaves = async () => {
     try {
@@ -207,6 +277,13 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
     setLoading(true)
     setMessage({ type: '', text: '' })
 
+    // Validate the request first
+    if (validationErrors.length > 0) {
+      setMessage({ type: 'error', text: 'Please fix validation errors before submitting' })
+      setLoading(false)
+      return
+    }
+
     const days = calculateDays(formData.start_date, formData.end_date)
 
     try {
@@ -215,7 +292,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         const { error } = await supabase
           .from('leave_requests')
           .update({
-            type: formData.type,
+            type: formatLeaveTypeForDb(formData.type),
             start_date: formData.start_date,
             end_date: formData.end_date,
             days_requested: days,
@@ -243,7 +320,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           .from('leave_requests')
           .insert([{
             employee_id: user!.employee.employee_id,
-            type: formData.type,
+            type: formatLeaveTypeForDb(formData.type),
             start_date: formData.start_date,
             end_date: formData.end_date,
             days_requested: days,
@@ -305,8 +382,9 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
       
       setShowForm(false)
       setEditingLeave(null)
-      setFormData({ type: 'Annual', start_date: '', end_date: '', reason: '' })
+      setFormData({ type: 'ANNUAL', start_date: '', end_date: '', reason: '' })
       fetchLeaves()
+      fetchLeaveBalances() // Refresh balances after leave submission
     } catch (error: any) {
       setMessage({ type: 'error', text: 'Could not submit leave request. Please try again.' })
     } finally {
@@ -700,6 +778,21 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
                   </div>
                 </div>
 
+                {/* Leave Balance Info for Employee's Own Requests */}
+                {activeTab === 'requests' && (
+                  <div className="mt-2 pt-2 border-t border-gray-100">
+                    {(() => {
+                      const balance = leaveBalances.find(b => b.policy?.code === leave.type)
+                      return balance ? (
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>Balance: {balance.available_balance} available</span>
+                          <span>Used: {balance.used_balance} / {balance.annual_entitlement}</span>
+                        </div>
+                      ) : null
+                    })()}
+                  </div>
+                )}
+
                 {/* Workflow Steps */}
                 <div className="mt-2 pt-2 border-t border-gray-100 overflow-x-auto">
                   <div className="flex items-center space-x-1 sm:space-x-2 min-w-max">
@@ -756,11 +849,17 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           onClose={() => {
             setShowForm(false)
             setEditingLeave(null)
-            setFormData({ type: 'Annual', start_date: '', end_date: '', reason: '' })
+            setFormData({ type: 'ANNUAL', start_date: '', end_date: '', reason: '' })
+            setValidationErrors([])
+            setAvailableBalance(0)
           }}
           loading={loading}
           editingLeave={editingLeave}
           calculateDays={calculateDays}
+          leavePolicies={leavePolicies}
+          leaveBalances={leaveBalances}
+          validationErrors={validationErrors}
+          availableBalance={availableBalance}
         />
       )}
     </div>
@@ -918,7 +1017,26 @@ const LeaveFormModal: React.FC<{
   loading: boolean
   editingLeave: LeaveRequest | null
   calculateDays: (start: string, end: string) => number
-}> = ({ formData, setFormData, onSubmit, onClose, loading, editingLeave, calculateDays }) => {
+  leavePolicies: LeavePolicy[]
+  leaveBalances: EmployeeLeaveBalance[]
+  validationErrors: string[]
+  availableBalance: number
+}> = ({ 
+  formData, 
+  setFormData, 
+  onSubmit, 
+  onClose, 
+  loading, 
+  editingLeave, 
+  calculateDays,
+  leavePolicies,
+  leaveBalances,
+  validationErrors,
+  availableBalance
+}) => {
+  const selectedPolicy = leavePolicies.find(p => p.code === formData.type)
+  const selectedBalance = leaveBalances.find(b => b.policy?.code === formData.type)
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-screen overflow-y-auto">
@@ -929,6 +1047,23 @@ const LeaveFormModal: React.FC<{
         </div>
         
         <form onSubmit={onSubmit} className="p-6 space-y-4">
+          {/* Validation Errors */}
+          {validationErrors.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <div className="flex items-start">
+                <AlertCircle className="h-4 w-4 text-red-600 mr-2 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="text-sm font-medium text-red-800">Validation Errors:</h4>
+                  <ul className="text-sm text-red-700 mt-1 space-y-1">
+                    {validationErrors.map((error, index) => (
+                      <li key={index}>• {error}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Leave Type
@@ -938,14 +1073,53 @@ const LeaveFormModal: React.FC<{
               onChange={(e) => setFormData({ ...formData, type: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             >
-              <option value="Annual">Annual Leave</option>
-              <option value="Sick">Sick Leave</option>
-              <option value="Personal">Personal Leave</option>
-              <option value="Maternity">Maternity Leave</option>
-              <option value="Paternity">Paternity Leave</option>
-              <option value="Emergency">Emergency Leave</option>
+              {leavePolicies.map(policy => (
+                <option key={policy.code} value={policy.code}>
+                  {policy.name}
+                </option>
+              ))}
             </select>
+            
+            {/* Policy Info */}
+            {selectedPolicy && (
+              <div className="mt-2 text-xs text-gray-500">
+                {selectedPolicy.description && (
+                  <p>{selectedPolicy.description}</p>
+                )}
+                <div className="flex items-center justify-between mt-1">
+                  <span>Annual Entitlement: {selectedPolicy.annual_entitlement} days</span>
+                  {selectedPolicy.max_consecutive_days && (
+                    <span>Max Consecutive: {selectedPolicy.max_consecutive_days} days</span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Leave Balance Display */}
+          {selectedBalance && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <h4 className="text-sm font-medium text-blue-900 mb-2">Your Leave Balance</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-blue-700">Available:</span>
+                  <span className="font-medium ml-2">{selectedBalance.available_balance}</span>
+                </div>
+                <div>
+                  <span className="text-blue-700">Used:</span>
+                  <span className="font-medium ml-2">{selectedBalance.used_balance}</span>
+                </div>
+                <div>
+                  <span className="text-blue-700">Entitlement:</span>
+                  <span className="font-medium ml-2">{selectedBalance.annual_entitlement}</span>
+                </div>
+                <div>
+                  <span className="text-blue-700">Pending:</span>
+                  <span className="font-medium ml-2">{selectedBalance.pending_balance}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -978,6 +1152,11 @@ const LeaveFormModal: React.FC<{
           {formData.start_date && formData.end_date && (
             <div className="text-sm text-gray-600">
               Duration: {calculateDays(formData.start_date, formData.end_date)} days
+              {availableBalance > 0 && (
+                <span className="ml-4">
+                  Balance after request: {availableBalance - calculateDays(formData.start_date, formData.end_date)}
+                </span>
+              )}
             </div>
           )}
 
@@ -997,7 +1176,7 @@ const LeaveFormModal: React.FC<{
           <div className="flex space-x-3 pt-4">
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || validationErrors.length > 0}
               className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Saving...' : (editingLeave ? 'Update Request' : 'Submit Request')}

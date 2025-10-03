@@ -8,9 +8,16 @@ import { isSupabaseConfigured } from '../../lib/supabase'
 interface HeaderProps {
   onMenuToggle: () => void
   title: string
+  leavePolicySubTab?: 'policies' | 'balances'
+  onLeavePolicySubTabChange?: (tab: 'policies' | 'balances') => void
 }
 
-export const Header: React.FC<HeaderProps> = ({ onMenuToggle, title }) => {
+export const Header: React.FC<HeaderProps> = ({ 
+  onMenuToggle, 
+  title, 
+  leavePolicySubTab, 
+  onLeavePolicySubTabChange 
+}) => {
   const { user } = useAuth()
   const [showNotifications, setShowNotifications] = React.useState(false)
   const [unreadCount, setUnreadCount] = React.useState(0)
@@ -54,7 +61,35 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle, title }) => {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 truncate">{title}</h1>
+          <div className="flex items-center space-x-4">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 truncate">{title}</h1>
+            
+            {/* Leave Policy Sub-tabs */}
+            {leavePolicySubTab && onLeavePolicySubTabChange && (
+              <div className="hidden sm:flex rounded-lg border border-gray-300 overflow-hidden">
+                <button
+                  onClick={() => onLeavePolicySubTabChange('policies')}
+                  className={`px-3 py-1 text-sm ${
+                    leavePolicySubTab === 'policies'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Policies
+                </button>
+                <button
+                  onClick={() => onLeavePolicySubTabChange('balances')}
+                  className={`px-3 py-1 text-sm ${
+                    leavePolicySubTab === 'balances'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Balances
+                </button>
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="flex items-center space-x-2 sm:space-x-4">

@@ -12,6 +12,8 @@ import { EmployeeManagement } from './components/employees/EmployeeManagement'
 import { HolidayManagement } from './components/holidays/HolidayManagement'
 import { Reports } from './components/reports/Reports'
 import { IntegratedCalendar } from './components/calendar/IntegratedCalendar'
+import { LeavePolicyManagement } from './components/leavePolicy/LeavePolicyManagement'
+import { LeaveBalanceManagement } from './components/leavePolicy/LeaveBalanceManagement'
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth()
@@ -19,6 +21,7 @@ const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showLeaveCreation, setShowLeaveCreation] = useState(false)
+  const [leavePolicySubTab, setLeavePolicySubTab] = useState<'policies' | 'balances'>('policies')
 
   // Reset to dashboard when user changes (sign in/out)
   React.useEffect(() => {
@@ -53,6 +56,7 @@ const AppContent: React.FC = () => {
       case 'dashboard': return 'Dashboard'
       case 'profile': return 'Profile'
       case 'leaves': return 'Leave Management'
+      case 'leave-policies': return 'Leave Policies'
       case 'employees': return 'Employee Management'
       case 'holidays': return 'Holiday Management'
       case 'calendar': return 'Calendar'
@@ -83,6 +87,12 @@ const AppContent: React.FC = () => {
             onCreateLeave={() => setShowLeaveCreation(true)}
           />
         )
+      case 'leave-policies':
+        return leavePolicySubTab === 'policies' ? (
+          <LeavePolicyManagement />
+        ) : (
+          <LeaveBalanceManagement />
+        )
       case 'employees':
         return <EmployeeManagement />
       case 'holidays':
@@ -109,6 +119,8 @@ const AppContent: React.FC = () => {
         <Header
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
           title={showLeaveCreation ? 'Create Leave Request' : getTabTitle(activeTab)}
+          leavePolicySubTab={activeTab === 'leave-policies' ? leavePolicySubTab : undefined}
+          onLeavePolicySubTabChange={setLeavePolicySubTab}
         />
         
         <main className={`flex-1 ${showLeaveCreation ? 'overflow-auto' : 'overflow-auto'}`}>
