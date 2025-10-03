@@ -174,16 +174,13 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
           if (teamEmployeeIds.length > 0) {
             query = query
               .in('employee_id', teamEmployeeIds)
-              .eq('status', 'Submitted')
+              .eq('status', 'Pending')
           } else {
             query = query.eq('employee_id', 'no-team-members')
           }
         } else if (user?.employee.role === 'HR') {
           // HR sees requests with Pending status that need HR approval
           query = query.eq('status', 'Pending')
-        } else if (user?.employee.role === 'Admin') {
-          // Admin can see all requests that need approval
-          query = query.in('status', ['Submitted', 'Pending'])
         } else {
           // Other roles don't have approve tab
           query = query.eq('employee_id', 'no-approval-access')
@@ -310,12 +307,11 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         let initialStatus = 'Submitted' // Default for employees
         
         if (user?.employee.role === 'HR') {
-          initialStatus = 'Approved' // HR requests are auto-approved
+          initialStatus = 'Approved'
         } else if (user?.employee.role === 'Manager' || user?.employee.role === 'Admin') {
-          initialStatus = 'Pending' // Manager/Admin requests go directly to HR for approval
+          initialStatus = 'Pending' // Manager/Admin requests go directly to HR
         } else {
-          // Employee requests start as Submitted and go to manager first
-          initialStatus = 'Submitted'
+          initialStatus = 'Pending'
         }
 
         const { data: newLeave, error } = await supabase
@@ -548,10 +544,10 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
   }
 
   const canApprove = (leave: LeaveRequest) => {
-    if (user?.employee.role === 'Manager' && leave.status === 'Submitted' && !leave.approved_by_manager) {
+    if (user?.employee.role === 'Manager' && leave.status === 'Pending' && !leave.approved_by_manager) {
       return true
     }
-    if ((user?.employee.role === 'HR' || user?.employee.role === 'Admin') && leave.status === 'Pending' && !leave.approved_by_hr) {
+    if (user?.employee.role === 'HR' && leave.status === 'Pending' && !leave.approved_by_hr) {
       return true
     }
     return false
