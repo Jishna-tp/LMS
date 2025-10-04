@@ -136,11 +136,16 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
   }
 
   const checkHolidayOverlap = () => {
-    const startDate = new Date(formData.start_date)
-    const endDate = new Date(formData.end_date)
+    // Parse dates as local dates to avoid timezone issues
+    const [startYear, startMonth, startDay] = formData.start_date.split('-').map(Number)
+    const [endYear, endMonth, endDay] = formData.end_date.split('-').map(Number)
+    const startDate = new Date(startYear, startMonth - 1, startDay)
+    const endDate = new Date(endYear, endMonth - 1, endDay)
     
     const overlappingHolidays = holidays.filter(holiday => {
-      const holidayDate = new Date(holiday.date)
+      // Parse holiday date as local date
+      const [hYear, hMonth, hDay] = holiday.date.split('-').map(Number)
+      const holidayDate = new Date(hYear, hMonth - 1, hDay)
       return holidayDate >= startDate && holidayDate <= endDate
     })
     
@@ -148,8 +153,11 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
   }
 
   const calculateDays = (startDate: string, endDate: string) => {
-    const start = new Date(startDate)
-    const end = new Date(endDate)
+    // Parse dates as local dates to avoid timezone issues
+    const [startYear, startMonth, startDay] = startDate.split('-').map(Number)
+    const [endYear, endMonth, endDay] = endDate.split('-').map(Number)
+    const start = new Date(startYear, startMonth - 1, startDay)
+    const end = new Date(endYear, endMonth - 1, endDay)
     const diffTime = Math.abs(end.getTime() - start.getTime())
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
   }
@@ -160,8 +168,11 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
     
     // Calculate weekends (simplified - doesn't account for holidays on weekends)
     let weekendDays = 0
-    const start = new Date(startDate)
-    const end = new Date(endDate)
+    // Parse dates as local dates
+    const [startYear, startMonth, startDay] = startDate.split('-').map(Number)
+    const [endYear, endMonth, endDay] = endDate.split('-').map(Number)
+    const start = new Date(startYear, startMonth - 1, startDay)
+    const end = new Date(endYear, endMonth - 1, endDay)
     
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const dayOfWeek = d.getDay()
@@ -468,7 +479,12 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
                         {holidayOverlap.map(holiday => (
                           <li key={holiday.id} className="flex items-center">
                             <Calendar className="h-3 w-3 mr-2 flex-shrink-0" />
-                            {holiday.name} - {new Date(holiday.date).toLocaleDateString()}
+                            {holiday.name} - {(() => {
+                              // Parse holiday date as local date for display
+                              const [year, month, day] = holiday.date.split('-').map(Number)
+                              const localDate = new Date(year, month - 1, day)
+                              return localDate.toLocaleDateString()
+                            })()}
                           </li>
                         ))}
                       </ul>

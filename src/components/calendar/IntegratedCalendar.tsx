@@ -134,9 +134,11 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
             return
           }
           
-          // Parse dates as local dates to avoid timezone issues
-          const leaveStartDate = new Date(leave.start_date + 'T00:00:00')
-          const leaveEndDate = new Date(leave.end_date + 'T00:00:00')
+          // Parse dates as local dates without time component
+          const [startYear, startMonth, startDay] = leave.start_date.split('-').map(Number)
+          const [endYear, endMonth, endDay] = leave.end_date.split('-').map(Number)
+          const leaveStartDate = new Date(startYear, startMonth - 1, startDay)
+          const leaveEndDate = new Date(endYear, endMonth - 1, endDay)
           
           // Create events for each day of the leave
          const currentDate = new Date(leaveStartDate)
@@ -172,6 +174,7 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
   }
 
   const formatDateToYYYYMMDD = (date: Date) => {
+    // Use local date components to avoid timezone shifts
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
@@ -179,6 +182,7 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
   }
 
   const formatDateToDDMMYYYY = (date: Date) => {
+    // Use local date components to avoid timezone shifts
     const day = String(date.getDate()).padStart(2, '0')
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const year = date.getFullYear()
@@ -186,18 +190,21 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
   }
 
   const parseDateString = (dateStr: string) => {
-    // Handle both YYYY-MM-DD and DD-MM-YYYY formats
+    // Parse date strings as local dates to avoid timezone issues
     if (dateStr.includes('-')) {
       const parts = dateStr.split('-')
       if (parts[0].length === 4) {
-        // YYYY-MM-DD format
+        // YYYY-MM-DD format - create local date
         return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]))
       } else {
-        // DD-MM-YYYY format
+        // DD-MM-YYYY format - create local date
         return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]))
       }
     }
-    return new Date(dateStr)
+    // Fallback - try to parse as local date
+    const fallbackDate = new Date(dateStr)
+    // Ensure we're working with local date components
+    return new Date(fallbackDate.getFullYear(), fallbackDate.getMonth(), fallbackDate.getDate())
   }
   const getViewStartDate = () => {
     const date = new Date(currentDate)
@@ -508,7 +515,12 @@ export const IntegratedCalendar: React.FC<CalendarProps> = ({
           }}
         >
           <div className="font-medium">{hoveredEvent.title}</div>
-          <div className="text-gray-300">{formatDateToDDMMYYYY(parseDateString(hoveredEvent.date))}</div>
+          <div className="text-gray-300">{(() => {
+            // Parse date as local date for display
+            const [year, month, day] = hoveredEvent.date.split('-').map(Number)
+            const localDate = new Date(year, month - 1, day)
+            return formatDateToDDMMYYYY(localDate)
+          })()}</div>
           {hoveredEvent.type === 'leave' && (
             <>
               {hoveredEvent.status && <div>Status: {hoveredEvent.status}</div>}
