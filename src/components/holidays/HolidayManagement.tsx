@@ -178,7 +178,7 @@ export const HolidayManagement: React.FC = () => {
           .select('id')
           .eq('name', holiday.name)
           .eq('date', newDateStr)
-          .single()
+          .maybeSingle()
 
         if (!existing) {
           newHolidays.push({
