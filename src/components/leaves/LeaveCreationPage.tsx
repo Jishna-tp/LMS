@@ -226,7 +226,7 @@ export const LeaveCreationPage: React.FC<LeaveCreationPageProps> = ({ onBack, on
       if (user?.employee.role === 'HR') {
         initialStatus = 'Approved'
       } else if (user?.employee.role === 'Manager' || user?.employee.role === 'Admin') {
-        // All other roles (Employee, Manager, Admin) start as Submitted
+        // Manager, Admin start as Pending
         initialStatus = 'Pending'
       } else {
         // All other roles (Employee, Manager, Admin) start as Submitted
