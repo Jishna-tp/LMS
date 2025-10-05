@@ -168,21 +168,22 @@ export const HolidayManagement: React.FC = () => {
       const newHolidays = []
 
       for (const holiday of recurringHolidays) {
-        const originalDate = new Date(holiday.date)
-        const newDate = new Date(nextYear, originalDate.getMonth(), originalDate.getDate())
+        // Parse the date as local date (YYYY-MM-DD format)
+        const [year, month, day] = holiday.date.split('-').map(Number)
+        const newDateStr = `${nextYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
         
         // Check if holiday already exists for next year
         const { data: existing } = await supabase
           .from('holidays')
           .select('id')
           .eq('name', holiday.name)
-          .eq('date', newDate.toISOString().split('T')[0])
-          .single()
+          .eq('date', newDateStr)
+          .maybeSingle()
 
         if (!existing) {
           newHolidays.push({
             name: holiday.name,
-            date: newDate.toISOString().split('T')[0],
+            date: newDateStr,
             type: holiday.type,
             is_recurring: true,
             description: holiday.description,
@@ -413,12 +414,17 @@ export const HolidayManagement: React.FC = () => {
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">{holiday.name}</h3>
-                <p className="text-sm text-gray-500">{new Date(holiday.date).toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}</p>
+                <p className="text-sm text-gray-500">{(() => {
+                  // Parse date as local date to avoid timezone shifts
+                  const [year, month, day] = holiday.date.split('-').map(Number)
+                  const localDate = new Date(year, month - 1, day)
+                  return localDate.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })
+                })()}</p>
               </div>
               
               <div className="flex space-x-2">
