@@ -314,7 +314,7 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ onLeaveSubmitt
         if (user?.employee.role === 'HR') {
           initialStatus = 'Approved' // HR requests are auto-approved
         } else if (user?.employee.role === 'Manager' || user?.employee.role === 'Admin') {
-          initialStatus = 'Pending' // All requests start as Submitted
+          initialStatus = 'Pending' // Manager/Admin requests go directly to HR
         } else {
           initialStatus = 'Submitted' // Employee requests start as Submitted
         }
