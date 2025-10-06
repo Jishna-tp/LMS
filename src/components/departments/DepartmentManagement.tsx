@@ -1,22 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Building, 
-  Users, 
-  UserCheck, 
-  UserX,
-  Calendar,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Edit,
-  Trash2,
-  Eye,
-  ArrowLeft
-} from 'lucide-react'
+import { Plus, Search, Filter, Building, Users, UserCheck, UserX, Calendar, Clock, CheckCircle, XCircle, AlertCircle, CreditCard as Edit, Trash2, Eye, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { 
   getDepartments,
