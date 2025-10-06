@@ -14,6 +14,7 @@ import { Reports } from './components/reports/Reports'
 import { IntegratedCalendar } from './components/calendar/IntegratedCalendar'
 import { LeavePolicyManagement } from './components/leavePolicy/LeavePolicyManagement'
 import { LeaveBalanceManagement } from './components/leavePolicy/LeaveBalanceManagement'
+import { DepartmentManagement } from './components/departments/DepartmentManagement'
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth()
@@ -57,6 +58,7 @@ const AppContent: React.FC = () => {
       case 'profile': return 'Profile'
       case 'leaves': return 'Leave Management'
       case 'leave-policies': return 'Leave Policies'
+      case 'departments': return 'Departments'
       case 'employees': return 'Employee Management'
       case 'holidays': return 'Holiday Management'
       case 'calendar': return 'Calendar'
@@ -93,6 +95,8 @@ const AppContent: React.FC = () => {
         ) : (
           <LeaveBalanceManagement />
         )
+      case 'departments':
+        return <DepartmentManagement />
       case 'employees':
         return <EmployeeManagement />
       case 'holidays':

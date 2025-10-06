@@ -10,7 +10,8 @@ import {
   BarChart3,
   LogOut,
   ChevronRight,
-  Settings
+  Settings,
+  Building
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { getUnreadNotificationCount } from '../../lib/notifications'
@@ -58,6 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isOpen
     { id: 'leaves', label: 'Leaves', icon: Calendar, roles: ['Employee', 'Manager', 'HR', 'Admin'] },
     { id: 'calendar', label: 'Calendar', icon: CalendarDays, roles: ['Employee', 'Manager', 'HR', 'Admin'] },
     { id: 'leave-policies', label: 'Leave Policies', icon: Settings, roles: ['HR', 'Admin'] },
+    { id: 'departments', label: 'Departments', icon: Building, roles: ['Manager', 'HR', 'Admin'] },
     { id: 'employees', label: 'Employees', icon: Users, roles: ['Admin'] },
     { id: 'holidays', label: 'Holidays', icon: Gift, roles: ['Admin'] },
     { id: 'reports', label: 'Reports', icon: BarChart3, roles: ['HR', 'Admin'] },
